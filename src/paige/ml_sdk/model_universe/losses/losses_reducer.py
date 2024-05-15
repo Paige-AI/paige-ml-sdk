@@ -11,7 +11,8 @@ class LossesReducer(ABC):
     """
 
     @abstractmethod
-    def reduce(self, losses: Mapping[str, Tensor]) -> Tensor: ...
+    def reduce(self, losses: Mapping[str, Tensor]) -> Tensor:
+        ...
 
     def _check_negative_loss(self, losses: Mapping[str, Tensor]) -> None:
         """Checks if there's any negative-valued loss.

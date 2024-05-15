@@ -6,9 +6,7 @@ from torch import Tensor
 
 from paige.ml_sdk.convert_to_torch_dtype import convert_to_torch_dtype
 from paige.ml_sdk.dataset_universe.datasets.fit import EmbeddingAggregatorFitDatasetItem
-from paige.ml_sdk.dataset_universe.datasets.predict import (
-    EmbeddingAggregatorPredictDatasetItem,
-)
+from paige.ml_sdk.dataset_universe.datasets.predict import EmbeddingAggregatorPredictDatasetItem
 
 SupportedDatasetOutputTypes = Union[
     EmbeddingAggregatorFitDatasetItem, EmbeddingAggregatorPredictDatasetItem

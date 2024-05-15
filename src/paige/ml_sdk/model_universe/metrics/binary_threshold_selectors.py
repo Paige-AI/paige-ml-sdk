@@ -7,11 +7,13 @@ from sklearn.metrics import roc_curve
 
 
 class PredsBinaryTargetsMetric(Protocol):
-    def __call__(self, preds: np.ndarray, targets: np.ndarray) -> float: ...
+    def __call__(self, preds: np.ndarray, targets: np.ndarray) -> float:
+        ...
 
 
 class ThresholdSelector(ABC):
-    def __call__(self, *, probs: NDArray, targets: NDArray) -> float: ...
+    def __call__(self, *, probs: NDArray, targets: NDArray) -> float:
+        ...
 
 
 class MinimizeExpectedCost(ThresholdSelector):

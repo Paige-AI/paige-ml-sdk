@@ -27,8 +27,15 @@ Missing label values may be encoded by the integer value of your choice. The abo
 Embedding files must all be present under a single directory. For example:
 ```
 embeddings_directory
-	|——slide_1.pt
-	|——slide_2.pt
+	|——slide_1.svs.pt
+	|——slide_2.svs.pt
+```
+Embedding files are expected to contain dictionaries with an `embeddings` key, whose value should be a tensor of shape `n_embeddings, embedding_size`. For example:
+```python
+>>> import torch
+>>> t = torch.load('slide.pt')
+>>> print(t['embeddings'].shape)  # suppose the slide has 136 tiles
+torch.Size([143, 2560])
 ```
 ## CLI Usage
 
@@ -85,9 +92,8 @@ python -m paige.ml_sdk --data.train_dataset_path train.csv --data.tune_dataset_p
 
 #### From a config file
 Specifying many cli args can be cumbersome. Experiments can also be configured from a yaml configuration file. When the command in the previous section is invoked, Lightning will create a yaml file in the current directory which offers an alternative way of configuring the experiment. The file will look something like this:
-```
-head config.yaml
-
+```bash
+alice@hpc:~$ head config.yaml
 data:
 	train_dataset_path: dataset.csv
 	tune_dataset_path: dataset.csv
@@ -98,7 +104,16 @@ data:
 	embeddings_filename_column: slide
 ...
 ```
-The experiment can also be run from the config, like so:
-```
+The experiment can also be run from the config via the `--config` argument:
+```bash
 python -m paige.ml_sdk --config config.yaml
 ```
+
+
+
+
+
+
+
+
+

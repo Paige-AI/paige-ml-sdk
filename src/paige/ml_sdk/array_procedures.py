@@ -9,11 +9,13 @@ TensorOrNDArray = Union[np.ndarray, Tensor]
 
 
 @overload
-def to_numpy(array: TensorOrNDArray, dtype: None = None) -> NDArray: ...
+def to_numpy(array: TensorOrNDArray, dtype: None = None) -> NDArray:
+    ...
 
 
 @overload
-def to_numpy(array: Tensor, dtype: Optional[torch.dtype] = None) -> NDArray: ...
+def to_numpy(array: Tensor, dtype: Optional[torch.dtype] = None) -> NDArray:
+    ...
 
 
 def to_numpy(array: TensorOrNDArray, dtype: Optional[torch.dtype] = None) -> NDArray:
@@ -31,11 +33,13 @@ P = TypeVar('P', bound=Tensor)
 
 
 @overload
-def enforce_1d_shape(array: T) -> T: ...
+def enforce_1d_shape(array: T) -> T:
+    ...
 
 
 @overload
-def enforce_1d_shape(array: P) -> P: ...
+def enforce_1d_shape(array: P) -> P:
+    ...
 
 
 def enforce_1d_shape(array: Union[T, P]) -> Union[Union[T, P], TensorOrNDArray]:
@@ -62,11 +66,13 @@ def enforce_1d_shape(array: Union[T, P]) -> Union[Union[T, P], TensorOrNDArray]:
 
 
 @overload
-def enforce_2d_shape(array: T) -> T: ...
+def enforce_2d_shape(array: T) -> T:
+    ...
 
 
 @overload
-def enforce_2d_shape(array: P) -> P: ...
+def enforce_2d_shape(array: P) -> P:
+    ...
 
 
 def enforce_2d_shape(array: Union[T, P]) -> Union[Union[T, P], TensorOrNDArray]:

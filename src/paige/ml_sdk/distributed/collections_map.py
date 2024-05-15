@@ -67,16 +67,20 @@ class MapCollection(ABC, Generic[R_TENSOR, R_NDARRAY]):
         return __adict.__class__({k: self.map(v) for k, v in __adict.items()})
 
     @overload
-    def map(self, item: Tensor) -> R_TENSOR: ...
+    def map(self, item: Tensor) -> R_TENSOR:
+        ...
 
     @overload
-    def map(self, item: NDArray[Any]) -> R_NDARRAY: ...
+    def map(self, item: NDArray[Any]) -> R_NDARRAY:
+        ...
 
     @overload
-    def map(self, item: T_TUPLE) -> T_TUPLE: ...
+    def map(self, item: T_TUPLE) -> T_TUPLE:
+        ...
 
     @overload
-    def map(self, item: T_DICT) -> T_DICT: ...
+    def map(self, item: T_DICT) -> T_DICT:
+        ...
 
     def map(self, item: Any) -> Any:
         if isinstance(item, Tensor):
@@ -147,7 +151,8 @@ class ToCPU(ABC):
     """Move every GPU Tensor in a collection to CPU memory."""
 
     @abstractmethod
-    def to_cpu(self, item: T) -> T: ...
+    def to_cpu(self, item: T) -> T:
+        ...
 
 
 class ToCPUPerTensor(ToCPU, MapCollection[Tensor, NDArray[Any]]):

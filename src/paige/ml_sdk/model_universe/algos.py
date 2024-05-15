@@ -24,10 +24,7 @@ from paige.ml_sdk.model_universe.metrics.metrics_computers.aggregator_metrics im
     AggregatorMulticlassGroupMetricsComputer,
 )
 from paige.ml_sdk.model_universe.nn.agata import Agata
-from paige.ml_sdk.model_universe.nn.components.fc import (
-    HPSFCLayerHeadConfig,
-    LinearLayerSpec,
-)
+from paige.ml_sdk.model_universe.nn.components.fc import HPSFCLayerHeadConfig, LinearLayerSpec
 from paige.ml_sdk.model_universe.nn.perceiver import PerceiverResampler, PerceiverWrapper
 
 
@@ -212,4 +209,5 @@ class BinClsPerceiver(Aggregator):
         )
 
 
-class MultiClsPerceiver(Aggregator): ...
+class MultiClsPerceiver(Aggregator):
+    ...

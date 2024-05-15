@@ -1,9 +1,7 @@
 import torch
 from torch import Tensor
 
-from paige.ml_sdk.dataset_universe.datasets.predict import (
-    EmbeddingAggregatorPredictDatasetItem,
-)
+from paige.ml_sdk.dataset_universe.datasets.predict import EmbeddingAggregatorPredictDatasetItem
 
 
 class TestEmbeddingAggregatorPredictDatasetItem:

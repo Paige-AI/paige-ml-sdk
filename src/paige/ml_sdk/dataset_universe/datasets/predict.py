@@ -11,4 +11,5 @@ class EmbeddingAggregatorPredictDatasetItem(NamedTuple):
 
 class EmbeddingAggregatorPredictDatasetProvider(Protocol):
     @property
-    def dataset(self) -> Dataset[EmbeddingAggregatorPredictDatasetItem]: ...
+    def dataset(self) -> Dataset[EmbeddingAggregatorPredictDatasetItem]:
+        ...

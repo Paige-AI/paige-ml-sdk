@@ -39,7 +39,6 @@ class TestHPSNet:
     def test_prediction_head_should_implement_forward_correctly(
         self, f_head: HPSFCLayerHead
     ) -> None:
-
         class ReferenceImplementation(Module):
             def __init__(self) -> None:
                 super().__init__()

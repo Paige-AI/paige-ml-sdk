@@ -33,11 +33,10 @@ class AggregatorBinClsGroupMetricsComputer(AggregatorMetricsComputer):
         label_map: Dict[str, torch.Tensor],
         instance_mask_map: Dict[str, torch.Tensor],
         heads_activations: Dict[str, torch.Tensor],
-        dataloader_idx: int = 0,
-    ) -> Dict[str, Dict[str, Dict[Literal['group'], MetricsOutput]]]:
+    ) -> Dict[str, MetricsOutput]:
         metrics_data = self.map_to_metrics_data(label_map, instance_mask_map, heads_activations)
         metrics = self.metrics_computer(metrics_data)
-        return {f'dl{dataloader_idx}': {self.label_name: {'group': metrics}}}
+        return {self.label_name: metrics}
 
     def map_to_metrics_data(
         self,
@@ -74,11 +73,10 @@ class AggregatorMulticlassGroupMetricsComputer(AggregatorMetricsComputer):
         label_map: Dict[str, torch.Tensor],
         instance_mask_map: Dict[str, torch.Tensor],
         heads_activations: Dict[str, torch.Tensor],
-        dataloader_idx: int = 0,
-    ) -> Dict[str, Dict[str, Dict[Literal['group'], MetricsOutput]]]:
+    ) -> Dict[str, MetricsOutput]:
         metrics_data = self.map_to_metrics_data(label_map, instance_mask_map, heads_activations)
         metrics = self.metrics_computer(metrics_data)
-        return {f'dl{dataloader_idx}': {self.label_name: {'group': metrics}}}  # type: ignore
+        return {self.label_name: metrics}  # type: ignore
 
     def map_to_metrics_data(
         self,

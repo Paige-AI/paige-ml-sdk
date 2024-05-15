@@ -1,8 +1,7 @@
 import logging
-from collections import defaultdict
+from collections import abc
 from typing import (
     Any,
-    DefaultDict,
     Dict,
     List,
     Literal,
@@ -19,7 +18,6 @@ from typing import (
 
 from environs import Env
 from lightning.pytorch import LightningModule, Trainer
-from lightning.pytorch.loggers import Logger as LightningLogger
 from torch import Tensor
 from torch.optim import Optimizer
 
@@ -32,10 +30,7 @@ from paige.ml_sdk.dict_procedures import deep_update
 from paige.ml_sdk.distributed.collections_map import gather_per_tensor, to_cpu_per_tensor
 from paige.ml_sdk.distributed.collective import is_td_active, is_world_main_process
 from paige.ml_sdk.enforce_type import enforce_not_none_type, enforce_type
-from paige.ml_sdk.model_universe.losses.losses_reducer import (
-    LossesReducer,
-    SumLossesReducer,
-)
+from paige.ml_sdk.model_universe.losses.losses_reducer import LossesReducer, SumLossesReducer
 from paige.ml_sdk.model_universe.optimizers.lr_schedulers import (
     LRSchedulerPartial,
     LRSchedulerTypes,
@@ -95,7 +90,6 @@ class AggregatorMetricsComputer(Protocol):
         label_map: Dict[str, Tensor],
         instance_mask_map: Dict[str, Tensor],
         heads_activations: Dict[str, Tensor],
-        dataloader_idx: int,
     ) -> Dict[str, Dict[str, Any]]: ...
 
 
@@ -131,11 +125,9 @@ class Aggregator(LightningModule):
         self._val_step_output_keys = val_step_output_keys
         self._test_step_output_keys = test_step_output_keys
 
-        self._num_val_dataloaders = 0
-        self._num_test_dataloaders = 0
         self.training_outputs: List[AggregatorStepOutput] = []
-        self.validation_outputs: DefaultDict[str, List[AggregatorStepOutput]] = defaultdict(list)
-        self.test_outputs: DefaultDict[str, List[AggregatorStepOutput]] = defaultdict(list)
+        self.validation_outputs: List[AggregatorStepOutput] = []
+        self.test_outputs: List[AggregatorStepOutput] = []
 
     def forward(  # type: ignore
         self, x: Tensor, padding_masks: Optional[Tensor]
@@ -171,9 +163,8 @@ class Aggregator(LightningModule):
     def at_epoch_end(
         self,
         outputs: List[AggregatorStepOutput],
-        dataloader_idx: int,
         metric_computers: Sequence[AggregatorMetricsComputer],
-        stage: Literal['train', 'validate', 'epoch', 'test'],
+        stage: Literal['train', 'val', 'epoch', 'test'],
     ) -> None:  # type: ignore
         """Performs a routine at the end of each epoch."""
         # concatenate batch outputs
@@ -185,17 +176,21 @@ class Aggregator(LightningModule):
         if is_td_active() and not is_world_main_process():
             raise RuntimeError('only main process is allowed to perform metrics computation.')
 
-        # compute epoch metrics
+        # Compute epoch metrics. Must do 2 things:
+        # 1. Flatten them because `log_dict`` only accepts flat dictionaries
+        # 2. Remove null metrics because `log_dict` only accepts Tensors, floats, and integers
+        #    This happens when a metric cannot be computed due to insufficient sample size
         epoch_metrics = self._compute_metrics_per_epoch(
-            *batch_model_output_or_none, metric_computers, dataloader_idx=dataloader_idx
+            *batch_model_output_or_none, metric_computers
         )
-        self._log_metrics({stage: epoch_metrics, 'epoch': self.current_epoch})
+        epoch_metrics = flatten({stage: epoch_metrics})
+        epoch_metrics = {k: v for k, v in epoch_metrics.items() if v}
+        self.log_dict(epoch_metrics)
 
     def on_train_epoch_end(self) -> None:
         if Env().bool('PAIGE_ml_sdk__USE_AGGREGATOR_TRAINING_EPOCH_END', True):
             self.at_epoch_end(
                 outputs=self.training_outputs,
-                dataloader_idx=0,
                 metric_computers=self._train_metrics_computers,
                 stage='train',
             )
@@ -205,62 +200,53 @@ class Aggregator(LightningModule):
         self,
         batch: EmbeddingAggregatorFitCollatedItems,
         batch_idx: int,
-        dataloader_idx: int = 0,
     ) -> AggregatorStepOutput:
         """Runs a forward pass on a single batch of validation dataset and returns the loss."""
         model_output = self._shared_forward_pass(batch)
         loss = self._compute_per_batch_loss(batch, model_output, stage='val')
-
-        self._num_val_dataloaders = max(self._num_val_dataloaders, dataloader_idx)
         output = self._return_step_output(
             batch, model_output, loss, batch_idx, self._val_step_output_keys, stage='val'
         )
 
-        if Env().bool('PAIGE_ml_sdk__USE_AGGREGATOR_VALIDATION_EPOCH_END', True):
-            self.validation_outputs[str(dataloader_idx)].append(output)
+        if Env().bool('PAIGE_ML_SDK__USE_AGGREGATOR_VALIDATION_EPOCH_END', True):
+            self.validation_outputs.append(output)
 
         return output
 
     def on_validation_epoch_end(self) -> None:
-        if Env().bool('PAIGE_ml_sdk__USE_AGGREGATOR_VALIDATION_EPOCH_END', True):
-            for i, _outputs in self.validation_outputs.items():
-                self.at_epoch_end(
-                    outputs=_outputs,
-                    dataloader_idx=int(i),
-                    metric_computers=self._val_metrics_computers,
-                    stage='validate',
-                )
-            self.validation_outputs = defaultdict(list)
+        if Env().bool('PAIGE_ML_SDK__USE_AGGREGATOR_VALIDATION_EPOCH_END', True):
+            self.at_epoch_end(
+                outputs=self.validation_outputs,
+                metric_computers=self._val_metrics_computers,
+                stage='val',
+            )
+            self.validation_outputs = []
 
     def test_step(  # type: ignore
         self,
         batch: EmbeddingAggregatorFitCollatedItems,
         batch_idx: int,
-        dataloader_idx: int = 0,
     ) -> AggregatorStepOutput:
         """Runs a forward pass on a single batch of validation dataset and returns the loss."""
         model_output = self._shared_forward_pass(batch)
         loss = self._compute_per_batch_loss(batch, model_output, stage='test')
-        self._num_test_dataloaders = max(self._num_test_dataloaders, dataloader_idx)
         output = self._return_step_output(
             batch, model_output, loss, batch_idx, self._test_step_output_keys, stage='test'
         )
 
         if Env().bool('PAIGE_ml_sdk__USE_AGGREGATOR_TEST_EPOCH_END', True):
-            self.test_outputs[str(dataloader_idx)].append(output)
+            self.test_outputs.append(output)
 
         return output
 
     def on_test_epoch_end(self) -> None:
         if Env().bool('PAIGE_ml_sdk__USE_AGGREGATOR_TEST_EPOCH_END', True):
-            for i, _outputs in self.test_outputs.items():
-                self.at_epoch_end(
-                    outputs=_outputs,
-                    dataloader_idx=int(i),
-                    metric_computers=self._test_metrics_computers,
-                    stage='test',
-                )
-            self.test_outputs = defaultdict(list)
+            self.at_epoch_end(
+                outputs=self.test_outputs,
+                metric_computers=self._test_metrics_computers,
+                stage='test',
+            )
+            self.test_outputs = []
 
     def configure_optimizers(
         self,
@@ -280,7 +266,6 @@ class Aggregator(LightningModule):
         self,
         batch: Union[EmbeddingAggregatorFitCollatedItems, EmbeddingAggregatorPredictCollatedItems],
         batch_idx: int,
-        dataloader_idx: int = 0,
     ) -> AggregatorOutput:
         return self._shared_forward_pass(batch)
 
@@ -371,45 +356,33 @@ class Aggregator(LightningModule):
         instance_mask_map: Dict[str, Tensor],
         heads_activations: Dict[str, Tensor],
         metrics_computers: Sequence[AggregatorMetricsComputer],
-        dataloader_idx: int,
-    ) -> Dict[str, Dict[str, Any]]:
+    ) -> Dict[str, Any]:
         """Computes a metric value for each metrics computer."""
-        metrics: Dict[str, Dict[str, Any]] = {}
+        metrics: Dict[str, Any] = {}
         for metrics_computer in metrics_computers:
             deep_update(
                 metrics,
-                metrics_computer(label_map, instance_mask_map, heads_activations, dataloader_idx),
+                metrics_computer(label_map, instance_mask_map, heads_activations),
             )
         return metrics
-
-    def _log_metrics(
-        self,
-        metrics_computer_output: Dict[
-            Literal['train', 'validate', 'epoch', 'test'],
-            Union[Dict[str, Dict[str, Dict[Literal['group'], AggregatorStepOutput]]], int],
-        ],
-    ) -> None:
-        """Flush the results of metrics computation to the logger(s).
-
-        Args:
-            metrics_computer_output: The results of metrics computation.
-
-        .. note::
-           We use `self.logger.log_metrics` instead of `self.log_dict` because the latter does
-           not support a dict nested more than one level. As of Nov 5th 2021, we support only
-           primitive types (e.g. `float`) as the value of a single metric computation, as
-           defined by `AggregatorStepOutput`. We shall evolve the design when we need to
-           support more complex types (e.g. plot, arrays).
-        """
-        if self.logger is not None and is_world_main_process(raise_if_td_inactive=False):
-            logger.info(f'[Epoch {self.current_epoch}] Metrics {metrics_computer_output}')
-            # TODO: Our implementation of `metrics_computer_output` is only compatible with
-            #  WandbLogger and other loggers that support nested structures. We must implement a
-            #  new base class to make this type-safe.
-            enforce_type(LightningLogger, self.logger).log_metrics(metrics_computer_output)  # type: ignore
 
     def _get_trainer(self) -> Trainer:
         """Fetches the trainer instance attached to the model at runtime."""
         # Enforcing Trainer type since we rely that PL must attach it to the module by this point.
         trainer: Trainer = enforce_type(Trainer, self.trainer)
         return trainer
+
+
+def flatten(d: Any, parent_key: str = '', sep: str = '.'):
+    """Flattens a dict according to sep.
+
+    example: flatten({'a': {'b': 1}}) -> {'a.b': 1}
+    """
+    items = []
+    for k, v in d.items():
+        new_key = parent_key + sep + k if parent_key else k
+        if isinstance(v, abc.MutableMapping):
+            items.extend(flatten(v, new_key, sep=sep).items())
+        else:
+            items.append((new_key, v))
+    return dict(items)

@@ -12,9 +12,7 @@ from paige.ml_sdk.dataset_universe.collate_fns import (
     EmbeddingAggregatorVariableSizeSequencesPredictCollate,
 )
 from paige.ml_sdk.dataset_universe.datasets.fit import EmbeddingAggregatorFitDatasetItem
-from paige.ml_sdk.dataset_universe.datasets.predict import (
-    EmbeddingAggregatorPredictDatasetItem,
-)
+from paige.ml_sdk.dataset_universe.datasets.predict import EmbeddingAggregatorPredictDatasetItem
 
 
 @dataclass

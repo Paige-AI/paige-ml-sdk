@@ -14,7 +14,6 @@ MOCK_TENSOR = MagicMock(spec=Tensor, side_effect=RuntimeError('I should not have
 
 
 class TestAggregatorLossComputer:
-
     class _AggregatorOutput(NamedTuple):
         heads_logits: Dict[str, Tensor]
         heads_activations: Dict[str, Tensor]

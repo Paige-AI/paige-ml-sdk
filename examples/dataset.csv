@@ -1,4 +1,5 @@
 ,group,slide,cancer,precursor
 0,group_1,slide_1.svs,0,0
 1,group_2,slide_2.svs,1,-999
-2,group_1,slide_3.svs,0,0
+2,group_3,slide_3.svs,0,0
+3,group_4,slide_4.svs,1,1

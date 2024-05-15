@@ -27,9 +27,11 @@ class EmbeddingNotFoundError(Exception):
 
 # In case other Embedding Loader classes must be implemented
 class EmbeddingLoader(Protocol):
-    def load(self, __identifier: Union[str, Iterable[str]]) -> Tensor: ...
+    def load(self, __identifier: Union[str, Iterable[str]]) -> Tensor:
+        ...
 
-    def lookup_embeddings_filepath(self, embedding_filename: str) -> Optional[Path]: ...
+    def lookup_embeddings_filepath(self, embedding_filename: str) -> Optional[Path]:
+        ...
 
 
 class FileSystemEmbeddingLoader(EmbeddingLoader):

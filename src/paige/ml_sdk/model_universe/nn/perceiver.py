@@ -5,10 +5,7 @@ import torch.nn.functional as F
 from torch import Tensor, nn
 from torch.backends.cuda import sdp_kernel
 
-from paige.ml_sdk.model_universe.nn.components.fc import (
-    HPSFCLayerHead,
-    HPSFCLayerHeadConfig,
-)
+from paige.ml_sdk.model_universe.nn.components.fc import HPSFCLayerHead, HPSFCLayerHeadConfig
 
 
 class CrossAttentionNoProj(nn.Module):

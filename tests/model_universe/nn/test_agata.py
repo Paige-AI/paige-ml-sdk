@@ -3,10 +3,7 @@ import torch
 import torch.nn as nn
 
 from paige.ml_sdk.model_universe.nn.agata import Agata
-from paige.ml_sdk.model_universe.nn.components.fc import (
-    HPSFCLayerHeadConfig,
-    LinearLayerSpec,
-)
+from paige.ml_sdk.model_universe.nn.components.fc import HPSFCLayerHeadConfig, LinearLayerSpec
 
 
 @pytest.fixture
@@ -33,7 +30,6 @@ def f_agata() -> Agata:
 
 
 class Test_Agata:
-
     BATCH_SIZE = 8
 
     def test_forward_should_output_correct_shapes(

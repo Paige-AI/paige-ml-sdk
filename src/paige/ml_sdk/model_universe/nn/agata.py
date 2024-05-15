@@ -6,10 +6,7 @@ from torch import Tensor
 from paige.ml_sdk.model_universe.nn.components.attention import (
     DotProductAttentionWithLearnedQueries,
 )
-from paige.ml_sdk.model_universe.nn.components.fc import (
-    HPSFCLayerHead,
-    HPSFCLayerHeadConfig,
-)
+from paige.ml_sdk.model_universe.nn.components.fc import HPSFCLayerHead, HPSFCLayerHeadConfig
 
 
 class Agata(nn.Module):

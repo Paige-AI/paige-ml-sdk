@@ -37,13 +37,16 @@ class ReduceCollection(ABC, Generic[T_TENSOR, T_NDARRAY, T_REST_contra, R_REST_c
     """
 
     @abstractmethod
-    def reduce_tensors(self, __tensors: Sequence[T_TENSOR]) -> T_TENSOR: ...
+    def reduce_tensors(self, __tensors: Sequence[T_TENSOR]) -> T_TENSOR:
+        ...
 
     @abstractmethod
-    def reduce_ndarrays(self, __ndarrays: Sequence[T_NDARRAY]) -> T_NDARRAY: ...
+    def reduce_ndarrays(self, __ndarrays: Sequence[T_NDARRAY]) -> T_NDARRAY:
+        ...
 
     @abstractmethod
-    def reduce_other(self, __objs: Sequence[T_REST_contra]) -> R_REST_co: ...
+    def reduce_other(self, __objs: Sequence[T_REST_contra]) -> R_REST_co:
+        ...
 
     def reduce_tuples(self, __tuples: Sequence[T_TUPLE]) -> T_TUPLE:
         """
@@ -92,19 +95,24 @@ class ReduceCollection(ABC, Generic[T_TENSOR, T_NDARRAY, T_REST_contra, R_REST_c
         return dict_cls({k: self.reduce(v) for k, v in merged_dict.items()})
 
     @overload
-    def reduce(self, items: Sequence[T_TENSOR]) -> T_TENSOR: ...
+    def reduce(self, items: Sequence[T_TENSOR]) -> T_TENSOR:
+        ...
 
     @overload
-    def reduce(self, items: Sequence[T_NDARRAY]) -> T_NDARRAY: ...
+    def reduce(self, items: Sequence[T_NDARRAY]) -> T_NDARRAY:
+        ...
 
     @overload
-    def reduce(self, items: Sequence[T_TUPLE]) -> T_TUPLE: ...
+    def reduce(self, items: Sequence[T_TUPLE]) -> T_TUPLE:
+        ...
 
     @overload
-    def reduce(self, items: Sequence[T_DICT]) -> T_DICT: ...
+    def reduce(self, items: Sequence[T_DICT]) -> T_DICT:
+        ...
 
     @overload
-    def reduce(self, items: Sequence[T_REST_contra]) -> R_REST_co: ...
+    def reduce(self, items: Sequence[T_REST_contra]) -> R_REST_co:
+        ...
 
     def reduce(self, items: Sequence) -> Any:
         """
@@ -139,7 +147,8 @@ class SupportReduceSequence(Protocol[T_REST_contra, R_REST_co]):
     in the implementaitons of ReduceCollection.
     """
 
-    def __call__(self, __objs: Sequence[T_REST_contra]) -> R_REST_co: ...
+    def __call__(self, __objs: Sequence[T_REST_contra]) -> R_REST_co:
+        ...
 
 
 T = TypeVar('T')

@@ -14,25 +14,28 @@ MetricsOutput = Dict[MetricName, float]
 
 
 class PredsMulticlassTargetsMetric(Protocol):
-    def __call__(self, preds: NDArray[np.int_], targets: NDArray[np.int_]) -> float: ...
+    def __call__(self, preds: NDArray[np.int_], targets: NDArray[np.int_]) -> float:
+        ...
 
 
 class ProbsMulticlassTargetsMetric(Protocol):
-    def __call__(self, probs: NDArray[np.float_], targets: NDArray[np.int_]) -> float: ...
+    def __call__(self, probs: NDArray[np.float_], targets: NDArray[np.int_]) -> float:
+        ...
 
 
 class ConfusionMatrixMulticlassTargetsMetric(Protocol):
-    def __call__(self, cm: NDArray[np.float_]) -> float: ...
+    def __call__(self, cm: NDArray[np.float_]) -> float:
+        ...
 
 
 class ProbsToPreds(Protocol):
-    def __call__(self, probs: NDArray[np.float_]) -> NDArray[np.int_]: ...
+    def __call__(self, probs: NDArray[np.float_]) -> NDArray[np.int_]:
+        ...
 
 
 class PredsAndTargetsToConfusionMatrix(Protocol):
-    def __call__(
-        self, preds: NDArray[np.int_], targets: NDArray[np.int_]
-    ) -> NDArray[np.float_]: ...
+    def __call__(self, preds: NDArray[np.int_], targets: NDArray[np.int_]) -> NDArray[np.float_]:
+        ...
 
 
 @dataclass
