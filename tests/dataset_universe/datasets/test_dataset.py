@@ -20,6 +20,14 @@ def f_df(f_path_to_dataset_csv: Path) -> pd.DataFrame:
 
 
 @pytest.fixture
+def f_path_to_dataset_parquet(f_path_to_dataset_csv: Path) -> Path:
+    df = pd.read_csv(f_path_to_dataset_csv)
+    out = f_path_to_dataset_csv.parent / 'dataset.parquet'
+    df.to_parquet(out)
+    return out
+
+
+@pytest.fixture
 def f_dataset(f_path_to_dataset_csv: Path, f_path_to_embeddings_dir: Path) -> EmbeddingDataset:
     return EmbeddingDataset.from_csv(
         f_path_to_dataset_csv,
@@ -32,11 +40,22 @@ def f_dataset(f_path_to_dataset_csv: Path, f_path_to_embeddings_dir: Path) -> Em
 
 
 class TestAggregatorDataset:
-    def test_should_load_from_csv(
+    def test_should_load_from_dataframe(
         self, f_path_to_dataset_csv: Path, f_path_to_embeddings_dir: Path
     ) -> None:
-        EmbeddingDataset.from_csv(
-            f_path_to_dataset_csv,
+        EmbeddingDataset(
+            pd.read_csv(f_path_to_dataset_csv),
+            embeddings_dir=f_path_to_embeddings_dir,
+            label_columns={'cancer'},
+            embeddings_filename_column='image_uri',
+            label_missing_value=-999,
+        )
+
+    def test_should_load_from_parquet(
+        self, f_path_to_dataset_parquet: Path, f_path_to_embeddings_dir: Path
+    ) -> None:
+        EmbeddingDataset.from_parquet(
+            f_path_to_dataset_parquet,
             embeddings_dir=f_path_to_embeddings_dir,
             label_columns={'cancer'},
             embeddings_filename_column='image_uri',

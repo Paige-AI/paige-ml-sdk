@@ -85,6 +85,29 @@ class EmbeddingDataset(Dataset[EmbeddingAggregatorFitDatasetItem]):
             filename_extension,
         )
 
+    @classmethod
+    def from_parquet(
+        cls,
+        dataset: PathLike,
+        embeddings_dir: PathLike,
+        label_columns: Set[str],
+        embeddings_filename_column: str,
+        label_missing_value: int,
+        group_column: Optional[str] = None,
+        validate_all_embeddings_exist: bool = True,
+        filename_extension: str = '.pt',
+    ):
+        return cls(
+            pd.read_parquet(dataset),
+            embeddings_dir,
+            label_columns,
+            embeddings_filename_column,
+            label_missing_value,
+            group_column,
+            validate_all_embeddings_exist,
+            filename_extension,
+        )
+
     @cached_property
     def index(self) -> str:
         """
