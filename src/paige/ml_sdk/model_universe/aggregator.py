@@ -50,11 +50,13 @@ class AggregatorOutput(Protocol):
 class AggregatorNetwork(Protocol):
     def __call__(
         self, __x: Tensor, __padding_masks: Optional[Tensor]
-    ) -> Dict[str, Union[Tensor, Dict[str, Tensor]]]: ...
+    ) -> Dict[str, Union[Tensor, Dict[str, Tensor]]]:
+        ...
 
     def forward(
         self, x: Tensor, padding_masks: Optional[Tensor]
-    ) -> Dict[str, Union[Tensor, Dict[str, Tensor]]]: ...
+    ) -> Dict[str, Union[Tensor, Dict[str, Tensor]]]:
+        ...
 
 
 def _convert_to_namedtuple(
@@ -90,7 +92,8 @@ class AggregatorMetricsComputer(Protocol):
         label_map: Dict[str, Tensor],
         instance_mask_map: Dict[str, Tensor],
         heads_activations: Dict[str, Tensor],
-    ) -> Dict[str, Dict[str, Any]]: ...
+    ) -> Dict[str, Dict[str, Any]]:
+        ...
 
 
 class Aggregator(LightningModule):

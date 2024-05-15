@@ -29,7 +29,7 @@ def f_path_to_dataset_parquet(f_path_to_dataset_csv: Path) -> Path:
 
 @pytest.fixture
 def f_dataset(f_path_to_dataset_csv: Path, f_path_to_embeddings_dir: Path) -> EmbeddingDataset:
-    return EmbeddingDataset.from_csv(
+    return EmbeddingDataset.from_filepath(
         f_path_to_dataset_csv,
         embeddings_dir=f_path_to_embeddings_dir,
         label_columns={'cancer'},
@@ -54,12 +54,13 @@ class TestAggregatorDataset:
     def test_should_load_from_parquet(
         self, f_path_to_dataset_parquet: Path, f_path_to_embeddings_dir: Path
     ) -> None:
-        EmbeddingDataset.from_parquet(
+        EmbeddingDataset.from_filepath(
             f_path_to_dataset_parquet,
             embeddings_dir=f_path_to_embeddings_dir,
             label_columns={'cancer'},
             embeddings_filename_column='image_uri',
             label_missing_value=-999,
+            mode='parquet',
         )
 
     def test_should_raise_AssertionError_if_nonexistant_target_column(

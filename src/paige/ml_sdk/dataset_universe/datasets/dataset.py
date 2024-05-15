@@ -1,7 +1,7 @@
 import logging
 from functools import cached_property
 from pathlib import Path
-from typing import List, Optional, Set, Tuple, Union, cast
+from typing import List, Literal, Optional, Set, Tuple, Union, cast
 
 import pandas as pd
 from torch.utils.data import Dataset
@@ -63,7 +63,7 @@ class EmbeddingDataset(Dataset[EmbeddingAggregatorFitDatasetItem]):
             self._validate_all_embeddings_exist()
 
     @classmethod
-    def from_csv(
+    def from_filepath(
         cls,
         dataset: PathLike,
         embeddings_dir: PathLike,
@@ -73,32 +73,11 @@ class EmbeddingDataset(Dataset[EmbeddingAggregatorFitDatasetItem]):
         group_column: Optional[str] = None,
         validate_all_embeddings_exist: bool = True,
         filename_extension: str = '.pt',
+        mode: Literal['csv', 'parquet'] = 'csv',
     ):
+        reader = pd.read_csv if mode == 'csv' else pd.read_parquet
         return cls(
-            pd.read_csv(dataset),
-            embeddings_dir,
-            label_columns,
-            embeddings_filename_column,
-            label_missing_value,
-            group_column,
-            validate_all_embeddings_exist,
-            filename_extension,
-        )
-
-    @classmethod
-    def from_parquet(
-        cls,
-        dataset: PathLike,
-        embeddings_dir: PathLike,
-        label_columns: Set[str],
-        embeddings_filename_column: str,
-        label_missing_value: int,
-        group_column: Optional[str] = None,
-        validate_all_embeddings_exist: bool = True,
-        filename_extension: str = '.pt',
-    ):
-        return cls(
-            pd.read_parquet(dataset),
+            reader(dataset),
             embeddings_dir,
             label_columns,
             embeddings_filename_column,

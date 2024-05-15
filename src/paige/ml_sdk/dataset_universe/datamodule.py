@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional, Set, Union
+from typing import Literal, Optional, Set, Union
 
 from lightning.pytorch import LightningDataModule
 from torch.utils.data import DataLoader, Dataset
@@ -50,7 +50,7 @@ class AggregatorDataModule(LightningDataModule):
         return self.make_dataloader(self.test_dataset, shuffle=False)
 
 
-def init_aggregator_datamodule(
+def init_datamodule_from_dataset_filepaths(
     *,
     train_dataset_path: PathLike,
     tune_dataset_path: PathLike,
@@ -65,8 +65,9 @@ def init_aggregator_datamodule(
     filename_extension: str = '.pt',
     num_workers: int = 0,
     batch_size: int = 1,
+    mode: Literal['csv', 'parquet'] = 'csv',
 ) -> AggregatorDataModule:
-    """Initializes an AggregatorDataModule.
+    """Constructs datasets from their filepaths and intializes an AggregatorDataModule instance.
 
     Args:
         train_dataset_path: Path to train dataset csv.
@@ -90,7 +91,7 @@ def init_aggregator_datamodule(
         AggregatorDataModule: a datamodule complete with a train dataloader, tune dataloader, and
             optionally a test dataloader.
     """
-    train_dataset = EmbeddingDataset.from_csv(
+    train_dataset = EmbeddingDataset.from_filepath(
         train_dataset_path,
         train_embeddings_dir,
         label_columns,
@@ -98,9 +99,10 @@ def init_aggregator_datamodule(
         label_missing_value,
         group_col or embeddings_filename_column,  # fallback assumption: slide-level grouping
         filename_extension=filename_extension,
+        mode=mode,
     )
 
-    tune_dataset = EmbeddingDataset.from_csv(
+    tune_dataset = EmbeddingDataset.from_filepath(
         tune_dataset_path,
         tune_embeddings_dir or train_embeddings_dir,  # fallback assumption: share w/ train dir
         label_columns,
@@ -108,11 +110,12 @@ def init_aggregator_datamodule(
         label_missing_value,
         group_col or embeddings_filename_column,
         filename_extension=filename_extension,
+        mode=mode,
     )
 
     if test_dataset_path:
         # makes same fallback mode assumptions as above
-        test_dataset = EmbeddingDataset.from_csv(
+        test_dataset = EmbeddingDataset.from_filepath(
             test_dataset_path,
             test_embeddings_dir or train_embeddings_dir,
             label_columns,
@@ -120,6 +123,7 @@ def init_aggregator_datamodule(
             label_missing_value,
             group_col or embeddings_filename_column,
             filename_extension=filename_extension,
+            mode=mode,
         )
     else:
         test_dataset = None

@@ -38,7 +38,7 @@ LABEL_NAME_TO_OUTPUT_DIMS = {'cancer': 2, 'precursor': 1}  # 1-dim'l to test sof
 def f_aggregator_fit_datamodule(
     f_path_to_dataset_csv: Path, f_path_to_embeddings_dir: Path
 ) -> AggregatorDataModule:
-    dataset = EmbeddingDataset.from_csv(
+    dataset = EmbeddingDataset.from_filepath(
         dataset=f_path_to_dataset_csv,
         embeddings_dir=f_path_to_embeddings_dir,
         label_missing_value=-999,

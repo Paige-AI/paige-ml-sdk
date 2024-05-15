@@ -41,7 +41,7 @@ torch.Size([143, 2560])
 
 ### Data Args
 
-Any of the arguments to   `paige.ml_sdk.dataset_universe.datamodule.init_aggregator_datamodule` may be provided to the CLI. Let's take a look:
+Any of the arguments to   `paige.ml_sdk.dataset_universe.datamodule.init_datamodule_from_dataset_filepaths` may be provided to the CLI. Let's take a look:
 
 - `--data.train_dataset_path`: A path to the train dataset csv
 - `--data.tune_dataset_path`: A path to the tune dataset csv
