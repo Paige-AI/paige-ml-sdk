@@ -6,7 +6,7 @@ from torch import Tensor
 from paige.ml_sdk.model_universe.nn.components.attention import (
     DotProductAttentionWithLearnedQueries,
 )
-from paige.ml_sdk.model_universe.nn.components.fc import HPSFCLayerHead, HPSFCLayerHeadConfig
+from paige.ml_sdk.model_universe.nn.components.fc import FCHead, FCHeadConfig
 
 
 class Agata(nn.Module):
@@ -18,7 +18,7 @@ class Agata(nn.Module):
         layer1_out_features: int,
         layer2_out_features: int,
         activation: nn.Module,
-        label_name_fclayer_head_config: Mapping[str, HPSFCLayerHeadConfig],
+        label_name_fclayer_head_config: Mapping[str, FCHeadConfig],
         scaled_attention: bool = False,
         absolute_attention: bool = False,
         n_attention_queries: int = 1,
@@ -54,10 +54,10 @@ class Agata(nn.Module):
         self.activation = activation
 
         heads = {
-            name: HPSFCLayerHead(cfg.in_channels, cfg.layer_specs)
+            name: FCHead(cfg.in_channels, cfg.layer_specs)
             for name, cfg in label_name_fclayer_head_config.items()
         }
-        self.heads = cast(Mapping[str, HPSFCLayerHead], nn.ModuleDict(heads))
+        self.heads = cast(Mapping[str, FCHead], nn.ModuleDict(heads))
 
     def forward(  # type: ignore
         self, x: Tensor, padding_masks: Optional[Tensor]
@@ -65,17 +65,16 @@ class Agata(nn.Module):
         """Runs a forward pass.
 
         Args:
-            x: Batch of group embeddings. Expected to be in the shape of (batch, sequence, features
+            x: Batch of embeddings. Expected to be in the shape of (batch, sequence, features
             a.k.a. (b, s, f), because torch.nn.Linear operation requires features to be in the last
-            dimension. Beware! torch.nn.Conv1d requires features to be in the second dimension,
-            which would break compatibility; don't use Conv1d! Refs:
-             - https://pytorch.org/docs/stable/generated/torch.nn.Linear.html
-             - https://pytorch.org/docs/stable/generated/torch.nn.Conv1d.html
+            dimension.
+
             padding_masks: Mask that indicates which indices in a sequence are padding and which are
                 valid. Expected to be in the shape of (batch, sequence).
 
-        Returns: A dictionary containing output tensors for the aggregated embedding, output
-        head logits and activations, and attention scores.
+        Returns:
+            A dictionary containing output tensors for the aggregated embedding, output
+            head logits and activations, and attention scores.
         """
         # x.shape -> (batch, sequence, features) a.k.a (B, S, F)
         x_1, x_2 = self.forward_features(x)
@@ -117,7 +116,8 @@ class Agata(nn.Module):
         Raises:
             TypeError: Unsupported type is output by a head.
 
-        Returns: Dictionaries of label names mapped to head logits/activations.
+        Returns:
+            Dictionaries of label names mapped to head logits/activations.
         """
         heads_logits: Dict[str, Tensor] = {}
         heads_activations: Dict[str, Tensor] = {}

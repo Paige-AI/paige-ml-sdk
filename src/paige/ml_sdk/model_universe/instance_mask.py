@@ -7,12 +7,10 @@ def apply_instance_mask(tensor: Tensor, *, instance_mask: Tensor) -> Tensor:
     """Apply `instance_mask` by indexing into the tensor.
 
     Precondition:
-
         instance_mask: boolean `Tensor` of size (B, ) where T (<= B) has entries with true.
         tensor: `Tensor` of size (B, ...).
 
     Postcondition:
-
         tensor: `Tensor` of size (T, ...).
 
     """

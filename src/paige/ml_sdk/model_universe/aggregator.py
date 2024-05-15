@@ -50,13 +50,11 @@ class AggregatorOutput(Protocol):
 class AggregatorNetwork(Protocol):
     def __call__(
         self, __x: Tensor, __padding_masks: Optional[Tensor]
-    ) -> Dict[str, Union[Tensor, Dict[str, Tensor]]]:
-        ...
+    ) -> Dict[str, Union[Tensor, Dict[str, Tensor]]]: ...
 
     def forward(
         self, x: Tensor, padding_masks: Optional[Tensor]
-    ) -> Dict[str, Union[Tensor, Dict[str, Tensor]]]:
-        ...
+    ) -> Dict[str, Union[Tensor, Dict[str, Tensor]]]: ...
 
 
 def _convert_to_namedtuple(
@@ -92,8 +90,7 @@ class AggregatorMetricsComputer(Protocol):
         label_map: Dict[str, Tensor],
         instance_mask_map: Dict[str, Tensor],
         heads_activations: Dict[str, Tensor],
-    ) -> Dict[str, Dict[str, Any]]:
-        ...
+    ) -> Dict[str, Dict[str, Any]]: ...
 
 
 class Aggregator(LightningModule):
@@ -141,7 +138,6 @@ class Aggregator(LightningModule):
            tensors and/or dicts in order to be torchscript-compatible yet to enable different
            aggregator architectures to return different things. In reality think of the output of
            this method as something that adheres to the `AggregatorOutput` Protocol.
-
         """
         return self.model(x, padding_masks)
 
@@ -158,7 +154,7 @@ class Aggregator(LightningModule):
             batch, model_output, loss, batch_idx, self._train_step_output_keys, stage='train'
         )
 
-        if Env().bool('PAIGE_ml_sdk__USE_AGGREGATOR_TRAINING_EPOCH_END', True):
+        if Env().bool('PAIGE_ML_SDK__USE_AGGREGATOR_TRAINING_EPOCH_END', True):
             self.training_outputs.append(output)
 
         return output
@@ -169,7 +165,10 @@ class Aggregator(LightningModule):
         metric_computers: Sequence[AggregatorMetricsComputer],
         stage: Literal['train', 'val', 'epoch', 'test'],
     ) -> None:  # type: ignore
-        """Performs a routine at the end of each epoch."""
+        """Logs metrics.
+
+        ..note:: Metrics with None values will not be logged.
+        """
         # concatenate batch outputs
         batch_model_output_or_none = self._concat_training_step_outputs_on_main_rank(outputs)
         if batch_model_output_or_none is None:
@@ -191,7 +190,13 @@ class Aggregator(LightningModule):
         self.log_dict(epoch_metrics)
 
     def on_train_epoch_end(self) -> None:
-        if Env().bool('PAIGE_ml_sdk__USE_AGGREGATOR_TRAINING_EPOCH_END', True):
+        """Routine to performe at the end of each training epoch
+
+        ..note:: This routine can consume considerable memory due to concatenation of
+            all step outputs. If encountering OOM, consider setting
+            `PAIGE_ML_SDK__USE_AGGREGATOR_TRAINING_EPOCH_END` to false.
+        """
+        if Env().bool('PAIGE_ML_SDK__USE_AGGREGATOR_TRAINING_EPOCH_END', True):
             self.at_epoch_end(
                 outputs=self.training_outputs,
                 metric_computers=self._train_metrics_computers,
@@ -217,6 +222,12 @@ class Aggregator(LightningModule):
         return output
 
     def on_validation_epoch_end(self) -> None:
+        """Routine to performe at the end of each training epoch
+
+        ..note:: This routine can consume considerable memory due to concatenation of
+            all step outputs. If encountering OOM, consider setting
+            `PAIGE_ML_SDK__USE_AGGREGATOR_TRAINING_EPOCH_END` to false.
+        """
         if Env().bool('PAIGE_ML_SDK__USE_AGGREGATOR_VALIDATION_EPOCH_END', True):
             self.at_epoch_end(
                 outputs=self.validation_outputs,
@@ -230,20 +241,26 @@ class Aggregator(LightningModule):
         batch: EmbeddingAggregatorFitCollatedItems,
         batch_idx: int,
     ) -> AggregatorStepOutput:
-        """Runs a forward pass on a single batch of validation dataset and returns the loss."""
+        """Runs a forward pass on a single batch of the test dataset and returns the loss."""
         model_output = self._shared_forward_pass(batch)
         loss = self._compute_per_batch_loss(batch, model_output, stage='test')
         output = self._return_step_output(
             batch, model_output, loss, batch_idx, self._test_step_output_keys, stage='test'
         )
 
-        if Env().bool('PAIGE_ml_sdk__USE_AGGREGATOR_TEST_EPOCH_END', True):
+        if Env().bool('PAIGE_ML_SDK__USE_AGGREGATOR_TEST_EPOCH_END', True):
             self.test_outputs.append(output)
 
         return output
 
     def on_test_epoch_end(self) -> None:
-        if Env().bool('PAIGE_ml_sdk__USE_AGGREGATOR_TEST_EPOCH_END', True):
+        """Routine to performe at the end of each training epoch
+
+        ..note:: This routine can consume considerable memory due to concatenation of
+            all step outputs. If encountering OOM, consider setting
+            `PAIGE_ML_SDK__USE_AGGREGATOR_TRAINING_EPOCH_END` to false.
+        """
+        if Env().bool('PAIGE_ML_SDK__USE_AGGREGATOR_TEST_EPOCH_END', True):
             self.at_epoch_end(
                 outputs=self.test_outputs,
                 metric_computers=self._test_metrics_computers,
@@ -342,8 +359,7 @@ class Aggregator(LightningModule):
     def _concat_training_step_outputs_on_main_rank(
         outputs: List[AggregatorStepOutput],
     ) -> Optional[Tuple[Dict[str, Tensor], Dict[str, Tensor], Dict[str, Tensor]]]:
-        """
-        For each Tensor and NDArray in batches and model outputs:
+        """For each Tensor and NDArray in batches and model outputs:
         - concatenate along the 0th dimension on the each rank
         - move all GPU Tensors to CPU
         - gather Tensors and NDArrays on the main rank, concatenate along 0th dimension
@@ -377,9 +393,9 @@ class Aggregator(LightningModule):
 
 
 def flatten(d: Any, parent_key: str = '', sep: str = '.'):
-    """Flattens a dict according to sep.
+    """Flattens a dict according to `sep`. Example:
 
-    example: flatten({'a': {'b': 1}}) -> {'a.b': 1}
+    flatten({'a': {'b': 1}}) -> {'a.b': 1}
     """
     items = []
     for k, v in d.items():

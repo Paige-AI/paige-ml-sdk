@@ -5,13 +5,7 @@ from torch import Tensor
 from torch.nn import Linear, Module, Sequential
 
 
-class HPSNetOutput(NamedTuple):
-    backbone_embedding: Tensor
-    heads_logits: Dict[str, Tensor]
-    heads_activations: Dict[str, Tensor]
-
-
-class HPSFCLayerHeadOutput(NamedTuple):
+class FCHeadOutput(NamedTuple):
     logits: Tensor
     activations: Tensor
 
@@ -23,14 +17,14 @@ class LinearLayerSpec:
 
 
 @dataclass
-class HPSFCLayerHeadConfig:
+class FCHeadConfig:
     in_channels: int
     layer_specs: Sequence[LinearLayerSpec]
 
 
-class HPSFCLayerHead(Module):
+class FCHead(Module):
     def __init__(self, in_channels: int, layer_specs: Sequence[LinearLayerSpec]) -> None:
-        """Creates Heads for HPSNet with fully connected layers.
+        """Creates fully connected layers to be used as a model head.
 
         Args:
             in_channels: Number of channels of the feature vector provided by the backbone
@@ -53,12 +47,12 @@ class HPSFCLayerHead(Module):
         self.activation = self.layer_specs[-1].activation
         self.fc = Sequential(*ops)
 
-    def __call__(self, __x: Tensor) -> HPSFCLayerHeadOutput:  # type: ignore
-        out: HPSFCLayerHeadOutput = super().__call__(__x)
+    def __call__(self, __x: Tensor) -> FCHeadOutput:  # type: ignore
+        out: FCHeadOutput = super().__call__(__x)
         return out
 
-    def forward(self, x: Tensor) -> HPSFCLayerHeadOutput:  # type: ignore
+    def forward(self, x: Tensor) -> FCHeadOutput:  # type: ignore
         """Runs a forward pass."""
         logits = self.fc(x)
         activations = self.activation(logits)
-        return HPSFCLayerHeadOutput(logits=logits, activations=activations)
+        return FCHeadOutput(logits=logits, activations=activations)

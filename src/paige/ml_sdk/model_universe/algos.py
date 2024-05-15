@@ -24,7 +24,7 @@ from paige.ml_sdk.model_universe.metrics.metrics_computers.aggregator_metrics im
     AggregatorMulticlassGroupMetricsComputer,
 )
 from paige.ml_sdk.model_universe.nn.agata import Agata
-from paige.ml_sdk.model_universe.nn.components.fc import HPSFCLayerHeadConfig, LinearLayerSpec
+from paige.ml_sdk.model_universe.nn.components.fc import FCHeadConfig, LinearLayerSpec
 from paige.ml_sdk.model_universe.nn.perceiver import PerceiverResampler, PerceiverWrapper
 
 
@@ -42,6 +42,21 @@ class BinClsAgata(Aggregator):
         padding_indicator: int = 1,
         missing_label_value: int = -999,
     ):
+        """Instantiates an Aggregator lightningmodule specifically configured to train an Agata network
+        with one or more binary heads.
+
+        Args:
+            label_names: Names of model heads. Must match labels provided by the datamodule.
+            in_features: Dimensionality of embeddings. Defaults to 2560.
+            layer1_out_features: Dimensionality of first linear layer. Defaults to 512.
+            layer2_out_features: Dimensionality of second linear layer. Defaults to 512.
+            activation: Activation function to use. Defaults to ReLU.
+            scaled_attention: Whether or not to use scaled attention. Defaults to False.
+            absolute_attention: Whether or not to use absolute attention. Defaults to False.
+            n_attention_queries: Number of attention queries. Defaults to 1.
+            padding_indicator: Value that indicates padding positions in the embeddings mask.Defaults to 1.
+            missing_label_value: Missing label value. Defaults to -999.
+        """
         loss_computers = {
             ln: AggregatorLossComputer(
                 nn.CrossEntropyLoss(ignore_index=missing_label_value),
@@ -54,9 +69,7 @@ class BinClsAgata(Aggregator):
         lr_scheduler_partial = partial(torch.optim.lr_scheduler.StepLR, step_size=30, gamma=0.5)
         step_output_keys = ['heads_activations', 'instance_mask_map', 'label_map', 'loss']
         label_name_fclayer_head_config = {
-            ln: HPSFCLayerHeadConfig(
-                layer2_out_features, [LinearLayerSpec(dim=2, activation=nn.Sigmoid())]
-            )
+            ln: FCHeadConfig(layer2_out_features, [LinearLayerSpec(dim=2, activation=nn.Sigmoid())])
             for ln in label_names
         }
         activation = activation or nn.ReLU()
@@ -100,6 +113,22 @@ class MultiClsAgata(Aggregator):
         padding_indicator: int = 1,
         missing_label_value: int = -999,
     ):
+        """Instantiates an Aggregator lightningmodule specifically configured to train an Agata network
+        with one or more binary heads.
+
+        Args:
+            label_names: Names of model heads. Must match labels provided by the datamodule.
+            n_classes: Number of classes per head. Must match order of `label_names`.
+            in_features: Dimensionality of embeddings. Defaults to 2560.
+            layer1_out_features: Dimensionality of first linear layer. Defaults to 512.
+            layer2_out_features: Dimensionality of second linear layer. Defaults to 512.
+            activation: Activation function to use. Defaults to ReLU.
+            scaled_attention: Whether or not to use scaled attention. Defaults to False.
+            absolute_attention: Whether or not to use absolute attention. Defaults to False.
+            n_attention_queries: Number of attention queries. Defaults to 1.
+            padding_indicator: Value that indicates padding positions in the embeddings mask.Defaults to 1.
+            missing_label_value: Missing label value. Defaults to -999.
+        """
         loss_computers = {
             ln: AggregatorLossComputer(
                 nn.CrossEntropyLoss(ignore_index=missing_label_value),
@@ -112,7 +141,7 @@ class MultiClsAgata(Aggregator):
         lr_scheduler_partial = partial(torch.optim.lr_scheduler.StepLR, step_size=30, gamma=0.5)
         step_output_keys = ['heads_activations', 'instance_mask_map', 'label_map', 'loss']
         label_name_fclayer_head_config = {
-            ln: HPSFCLayerHeadConfig(
+            ln: FCHeadConfig(
                 layer2_out_features, [LinearLayerSpec(dim=nc, activation=nn.Sigmoid())]
             )
             for ln, nc in zip(label_names, n_classes)
@@ -173,7 +202,7 @@ class BinClsPerceiver(Aggregator):
         lr_scheduler_partial = partial(torch.optim.lr_scheduler.StepLR, step_size=30, gamma=0.5)
         step_output_keys = ['heads_activations', 'instance_mask_map', 'label_map', 'loss']
         label_name_fclayer_head_config = {
-            ln: HPSFCLayerHeadConfig(latent_dim, [LinearLayerSpec(dim=2, activation=nn.Sigmoid())])
+            ln: FCHeadConfig(latent_dim, [LinearLayerSpec(dim=2, activation=nn.Sigmoid())])
             for ln in label_names
         }
         perceiver = PerceiverResampler(
@@ -207,7 +236,3 @@ class BinClsPerceiver(Aggregator):
             train_step_output_keys=step_output_keys,
             test_step_output_keys=step_output_keys,
         )
-
-
-class MultiClsPerceiver(Aggregator):
-    ...

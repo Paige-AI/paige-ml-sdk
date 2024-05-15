@@ -3,17 +3,17 @@ import torch
 import torch.nn as nn
 
 from paige.ml_sdk.model_universe.nn.agata import Agata
-from paige.ml_sdk.model_universe.nn.components.fc import HPSFCLayerHeadConfig, LinearLayerSpec
+from paige.ml_sdk.model_universe.nn.components.fc import FCHeadConfig, LinearLayerSpec
 
 
 @pytest.fixture
 def f_agata() -> Agata:
     label_name_fclayer_head_config = {
-        'label_0': HPSFCLayerHeadConfig(
+        'label_0': FCHeadConfig(
             in_channels=2,
             layer_specs=[LinearLayerSpec(dim=4, activation=nn.Softmax(dim=1))],
         ),
-        'label_1': HPSFCLayerHeadConfig(
+        'label_1': FCHeadConfig(
             in_channels=2,
             layer_specs=[LinearLayerSpec(dim=1, activation=nn.Sigmoid())],
         ),

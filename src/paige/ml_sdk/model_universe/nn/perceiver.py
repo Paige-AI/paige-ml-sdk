@@ -5,7 +5,7 @@ import torch.nn.functional as F
 from torch import Tensor, nn
 from torch.backends.cuda import sdp_kernel
 
-from paige.ml_sdk.model_universe.nn.components.fc import HPSFCLayerHead, HPSFCLayerHeadConfig
+from paige.ml_sdk.model_universe.nn.components.fc import FCHead, FCHeadConfig
 
 
 class CrossAttentionNoProj(nn.Module):
@@ -273,7 +273,7 @@ class PerceiverWrapper(nn.Module):
     def __init__(
         self,
         image_resampler: nn.Module,
-        label_name_fclayer_head_config: Mapping[str, HPSFCLayerHeadConfig],
+        label_name_fclayer_head_config: Mapping[str, FCHeadConfig],
         init_perceiver_path: Optional[str],
     ):
         super().__init__()
@@ -292,10 +292,10 @@ class PerceiverWrapper(nn.Module):
             self.image_resampler.load_state_dict(sd)
 
         heads = {
-            name: HPSFCLayerHead(cfg.in_channels, cfg.layer_specs)
+            name: FCHead(cfg.in_channels, cfg.layer_specs)
             for name, cfg in label_name_fclayer_head_config.items()
         }
-        self.heads = cast(Mapping[str, HPSFCLayerHead], nn.ModuleDict(heads))
+        self.heads = cast(Mapping[str, FCHead], nn.ModuleDict(heads))
 
     def forward(self, images: Tensor, image_pad_mask: Optional[Tensor]):
         '''

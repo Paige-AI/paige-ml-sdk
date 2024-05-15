@@ -76,7 +76,7 @@ The other arguments will depend on the arguments available to the model class's 
 - `--model.scaled_attention`: Whether or not to use scaled attention. Defaults to False.
 - `--model.absolute_attention`: Whether or not to use absolute attention. Defaults to False
 - `--model.n_attention_queries`: Number of attention queries. Defaults to 1
-- `--model.padding_indicator`: Value indicating padded tensors in embedding files. Defaults to 1.
+- `--model.padding_indicator`:  Value that indicates padding positions in the embeddings mask. Defaults to 1.
 - `--model.missing_label_value`: Missing label value. Defaults to -999.
 
 
