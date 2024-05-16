@@ -12,16 +12,6 @@ from scipy import stats as st
 from sklearn.metrics import confusion_matrix, recall_score
 
 
-def youden_j_statistic(preds: NDArray, targets: NDArray) -> float:
-    """Youden J statistic is sensitivity + specificity - 1
-
-    References
-    - https://en.wikipedia.org/wiki/Youden%27s_J_statistic
-    - https://stats.stackexchange.com/a/386433
-    """
-    return sensitivity(preds=preds, targets=targets) + specificity(preds=preds, targets=targets) - 1
-
-
 def sensitivity(preds: NDArray, targets: NDArray) -> float:
     # in binary classification, recall of the positive class is the same thing as sensitivity.
     sensitivity: float = recall_score(y_true=targets, y_pred=preds, pos_label=1, average='binary')
@@ -34,98 +24,9 @@ def specificity(preds: NDArray, targets: NDArray) -> float:
     return specificity
 
 
-def entropy(probs: Union[Any, float, NDArray]) -> Union[Any, float, NDArray]:
-    """Given an array of probability scores, this functions computes binary cross entropy for each element.
-
-    Args:
-        probs: An np.ndarray where each element shows a probability score
-
-    Returns:
-        Binary cross entropy computed for each element separately
-    """
-
-    if not isinstance(probs, np.ndarray):
-        raise ValueError(f'probs must be of type np.ndarray ({type(probs)})')
-
-    minimum_probability = cast(float, np.min(probs))
-    maximum_probability = cast(float, np.max(probs))
-    if minimum_probability < 0 or maximum_probability > 1:
-        raise ValueError('Elements of the input matrix/vector must be in range [0, 1]')
-
-    eps = 1e-10
-    ent = -(probs * np.log(probs + eps) + (1 - probs) * np.log(1 - probs + eps))
-
-    return ent
-
-
-def compute_mutual_info(probs: NDArray) -> Union[Any, float, NDArray]:
-    """Given an array of probability scores, this functions computes the mutual information.
-
-    Args:
-        probs: A vector or a 2D matrix. If 2D matrix, MI will be computed on each row
-
-    Returns:
-        Mutual information
-    """
-
-    if not isinstance(probs, np.ndarray):
-        raise ValueError(f'probs must be of type np.ndarray ({type(probs)})')
-
-    minimum_probability = cast(float, np.min(probs))
-    maximum_probability = cast(float, np.max(probs))
-    if minimum_probability < 0 or maximum_probability > 1:
-        raise ValueError('Elements of the input matrix/vector must be in range [0, 1]')
-
-    if probs.ndim == 1:
-        return entropy(np.mean(probs, keepdims=True)) - np.mean(entropy(probs))
-    elif probs.ndim == 2:
-        return entropy(np.mean(probs, axis=1)) - np.mean(entropy(probs), axis=1)
-    else:
-        raise ValueError('Input must be a vector or 2D matrix.')
-
-
-def compute_brier_score(
-    probs: NDArray[np.float_], targets: NDArray[np.int_]
-) -> Union[Any, float, NDArray]:
-    """Given an array/2D matrix of probability scores and actual labels, this functions computes the Brier score.
-
-    Args:
-        probs: A vector or a 2D matrix. If 2D matrix, MI will be computed on each row
-        targets: A vector of the same length as probs containing binary labels
-
-    Returns:
-        Brier score
-    """
-
-    if not isinstance(probs, np.ndarray):
-        raise ValueError(f'probs must be of type np.ndarray ({type(probs)})')
-
-    if not isinstance(targets, np.ndarray):
-        raise ValueError(f'targets must be of type np.ndarray ({type(probs)})')
-
-    if np.min(probs) < 0 or np.max(probs) > 1:
-        raise ValueError('Elements of the input matrix/vector must be in range [0, 1]')
-
-    if probs.ndim == 2 and targets.ndim == 1:
-        targets = targets[:, None]
-
-    if probs.ndim == 1:
-        return np.mean(np.power(targets - probs, 2))
-    elif probs.ndim == 2:
-        return np.mean(np.power(targets - probs, 2), axis=1)
-    else:
-        raise ValueError('Input must be a vector or 2D matrix.')
-
-
 @dataclass(frozen=True)
 class BinaryConfusionMatrixOutput:
-    """
-    Dataclass encapsulating the outputs of a binary confusion matrix.
-
-    While these really should be ints, a lot of other code and linting works much more
-    easily if these are floats. Right now, we deem the decrease in type precision is
-    acceptable to not increase complexity in other areas of the code.
-    """
+    """Dataclass encapsulating the outputs of a binary confusion matrix."""
 
     tp_count: float
     fp_count: float

@@ -25,7 +25,6 @@ dependencies = [
     "lightning~=2.1",
     "torch>=2.0,<2.3",
     "pandas>=2.0,<3",
-    "polars-lts-cpu[pyarrow,timezone]>=0.18.5",
     "environs>=9.3,<12",
     "scikit-learn~=1.1",
 ]

@@ -31,25 +31,20 @@ class EmbeddingDataset(Dataset[EmbeddingAggregatorFitDatasetItem]):
         Dataset to iterate over rows in a dataframe and return embedding Tensor from an
         EmbeddingLoader.
 
-        > We use DataFrameWithIndex to automatically create an *_index column based on the
-        > group_column.
-
-        > This class automatically calculates a `group_column` index column since pytorch
-        > will iterate over the groups by a numerical value between 0...len(groups), see
-        > __getitem__. This column will only be added if it is not already present.
-
         Args:
-            df (pd.DataFrame): A dataframe with each row containing a WSI file path and its labels.
-            label_columns (Set[str]): The names of the columns to select as labels.
-            group_column (str): The name of grouping column (not the index).
-            label_missing_value (int): The value to replace NaN values with in the instance mask
-                map.
-            embedding_loader (EmbeddingLoader): A callable which returns an embedding.
-            embeddings_filename_column (str): The name of the column which specifies, for a
+            dataset: A dataframe with each row containing a WSI file path and its labels.
+            embeddings_dir: Name of the dirtectory containing the embeddings.
+            label_columns: The names of the columns to select as labels.
+            embeddings_filename_column: The name of the column which specifies, for a
                 given row (i.e. a given group), the path to its embedding file(s).
-
+            label_missing_value: The value to replace NaN values with in the instance mask
+                map.
+            group_column: The name of grouping column (not the index).
+            validate_all_embeddings_exist: Whether or not to validate existence of embedding
+                files during initialization.
+            filename_extension: Embeddings filename extension. Defaults to `.pt`
         """
-        self._df = dataset  # access `df` property instead, which adds an index column
+        self._df = dataset  # use the `df` property instead, which adds an index column
         self.label_columns = label_columns
         self.label_missing_value = label_missing_value
         self.embeddings_filename_column = embeddings_filename_column
@@ -74,7 +69,8 @@ class EmbeddingDataset(Dataset[EmbeddingAggregatorFitDatasetItem]):
         validate_all_embeddings_exist: bool = True,
         filename_extension: str = '.pt',
         mode: Literal['csv', 'parquet'] = 'csv',
-    ):
+    ) -> 'EmbeddingDataset':
+        """Instantiates an EmbeddingDataset from a dataset filepath"""
         reader = pd.read_csv if mode == 'csv' else pd.read_parquet
         return cls(
             reader(dataset),
@@ -89,10 +85,7 @@ class EmbeddingDataset(Dataset[EmbeddingAggregatorFitDatasetItem]):
 
     @cached_property
     def index(self) -> str:
-        """
-        Returns:
-            str: The name of the column_name index.
-        """
+        """Returns The name of the column_name index."""
         return f'{self.group_column}_index'
 
     @cached_property
@@ -102,7 +95,7 @@ class EmbeddingDataset(Dataset[EmbeddingAggregatorFitDatasetItem]):
         This index column is used in __getitem__ to select rows belonging to the appropriate group.
 
         Returns:
-            pd.DataFrame: The dataframe with the index column attached.
+            The dataframe with the index column attached.
         """
         df = self._df.copy(deep=True)
         self._columns_sanity_check(
@@ -114,7 +107,7 @@ class EmbeddingDataset(Dataset[EmbeddingAggregatorFitDatasetItem]):
 
     def __getitem__(self, group_index: int) -> EmbeddingAggregatorFitDatasetItem:
         """
-        For a given group_index in return the embedding and its labels.
+        Return the embedding and its labels for a given group_index.
 
         Args:
             group_index : The index of a group to return the embedding for.
@@ -176,8 +169,5 @@ class EmbeddingDataset(Dataset[EmbeddingAggregatorFitDatasetItem]):
         return labels, embedding_file_names.tolist()
 
     def __len__(self) -> int:
-        """
-        Returns:
-            int: The amount of unique groups in the label group column.
-        """
+        """Returns the length of the dataset"""
         return self.df[self.index].nunique()

@@ -12,10 +12,5 @@ class EmbeddingAggregatorFitDatasetItem(NamedTuple):
 
 
 class EmbeddingAggregatorFitDatasetProvider(Protocol):
-    """
-    Provide map-style pytorch dataset and associated data.
-    """
-
     @property
-    def dataset(self) -> Dataset[EmbeddingAggregatorFitDatasetItem]:
-        ...
+    def dataset(self) -> Dataset[EmbeddingAggregatorFitDatasetItem]: ...

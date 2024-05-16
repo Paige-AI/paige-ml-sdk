@@ -61,18 +61,15 @@ MetricsOutput = Dict[MetricName, Optional[float]]
 
 # TODO: make these ABC and define them in ml.evaluator.metrics_functions.element_wise.binary
 class PredsBinaryTargetsMetric(Protocol):
-    def __call__(self, preds: np.ndarray, targets: np.ndarray) -> float:
-        ...
+    def __call__(self, preds: np.ndarray, targets: np.ndarray) -> float: ...
 
 
 class ProbsBinaryTargetsMetric(Protocol):
-    def __call__(self, probs: np.ndarray, targets: np.ndarray) -> float:
-        ...
+    def __call__(self, probs: np.ndarray, targets: np.ndarray) -> float: ...
 
 
 class ConfusionMatrixMetric(Protocol):
-    def __call__(self, preds: NDArray, targets: NDArray) -> BinaryConfusionMatrixOutput:
-        ...
+    def __call__(self, preds: NDArray, targets: NDArray) -> BinaryConfusionMatrixOutput: ...
 
 
 @dataclass
@@ -252,10 +249,6 @@ class BinaryClassificationMetricsComputer:
             'fp_count': cm_output.fp_count,
             'threshold': float(threshold),  # threshold selector returns float32, tests expect float
         }
-
-
-# Functions useful inside algo data to metrics data mappers.
-# TODO (george): find a better place for these.
 
 
 def extract_positive_class_from_probs(probs: Tensor, pos_cls_idx: int) -> Tensor:

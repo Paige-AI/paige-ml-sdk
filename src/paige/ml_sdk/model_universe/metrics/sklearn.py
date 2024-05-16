@@ -1,5 +1,5 @@
 """
-Translators from sklearn metrics into objects that satisfy our metrics protocols.
+Translators from sklearn metrics into objects that satisfy the sdk's metrics protocols.
 """
 
 from typing import cast

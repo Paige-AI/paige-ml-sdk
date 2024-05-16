@@ -50,8 +50,7 @@ class _EmbeddingAggregatorVariableSizeSequencesCollateHelper:
         padding_indicator: float = 1,
         padding_mask_dtype: torch.dtype = torch.uint8,
     ) -> None:
-        """Collate functionality to be used as the collate_fn of DataLoader for embedding
-        aggregators.
+        """Collate functionality to be used as a DataLoader's collate_fn
 
         Args:
             order: Desired order of group embeddings batch tensor. 'bsf' stands for Batch, Sequence,
@@ -66,8 +65,7 @@ class _EmbeddingAggregatorVariableSizeSequencesCollateHelper:
         Raises:
             ValueError: Unsupported order string is provided.
         """
-        # NOTE: `order` does not do anything right now as only 'bsf' is supported but we anticipate
-        # to add support for other orders as we have in the "old hotel"
+        # NOTE: `order` does not do anything right now as only 'bsf' is supported but we anticipate adding more.
         if order not in self.SUPPORTED_ORDERS:
             raise ValueError(
                 f'Got unsupported `order` of {order}. Expected one of the following options: {self.SUPPORTED_ORDERS}'
@@ -156,8 +154,7 @@ class EmbeddingAggregatorVariableSizeSequencesFitCollate:
         padding_indicator: float = 1,
         padding_mask_dtype: torch.dtype = torch.uint8,
     ) -> None:
-        """Collate functionality to be used as the collate_fn of DataLoader for fit stages of
-        embedding aggregators.
+        """Collate functionality to be used as the a Dataloader's collate_fn during trainer.fit().
 
         Args:
             order: Desired order of group embeddings batch tensor. 'bsf' stands for Batch, Sequence,
@@ -248,66 +245,6 @@ class EmbeddingAggregatorVariableSizeSequencesFitCollate:
         )
 
 
-class EmbeddingAggregatorFlattenedOnBatchAndSequenceDimensionsFitCollate:
-    def __init__(
-        self,
-    ) -> None:
-        """Collate functionality to be used as the collate_fn of DataLoader for fit stages of
-        embedding aggregators.
-        """
-        pass
-
-    def _concat_list_of_dictionaries(self, list_of_dictionaries: List[Mapping[str, Any]]):
-        unique_keys = set().union(*list_of_dictionaries)
-        return {k: [torch.tensor(d.get(k)) for d in list_of_dictionaries] for k in unique_keys}
-
-    def __call__(
-        self,
-        batch: Sequence[EmbeddingAggregatorFitDatasetItem],
-    ) -> EmbeddingAggregatorFitCollatedItems:
-        """Collates group embeddings into a batch tensor with padding if necessary, creates sequence
-        length tensor which describes the true length of each sequence in the batch, creates a
-        padding mask to indicate which positions in a sequence are valid and which are padding.
-
-        Args:
-            batch: List of items from Dataset. Length of batch size in loader.
-
-        Returns:
-            EmbeddingAggregatorFitCollatedItems: Output item with batch of group indices,
-            embeddings, label map, padding mask, and sequence lengths.
-        """
-        embeddings = torch.vstack([_batch.embeddings for _batch in batch]).unsqueeze(1)
-        helper_output = _CollateHelperOutput(
-            group_indices=torch.cat(
-                [torch.tensor([_batch.group_index] * len(_batch.embeddings)) for _batch in batch]
-            ),
-            embeddings=embeddings,  # tiles x seq len 1 x feature size
-            padding_mask=torch.zeros(embeddings.shape[0] * embeddings.shape[1], 1).byte(),
-            sequence_lengths=torch.ones(embeddings.shape[0] * embeddings.shape[1]).int(),
-        )
-
-        # we expect there to be labels to deal with during a `fit` routine but not a `predict` routine
-        label_map_batch = []
-        for _batch in batch:
-            label_map_in_current_batch = [_batch.label_map] * _batch.embeddings.shape[0]
-            label_map_batch.append(self._concat_list_of_dictionaries(label_map_in_current_batch))
-        label_map_batch = self._concat_list_of_dictionaries(label_map_batch)
-        label_map_batch = {label: torch.cat(label_map_batch[label]) for label in label_map_batch}
-
-        instance_mask_map_batch = {
-            label: torch.ones(len(label_map_batch[label])).bool() for label in label_map_batch
-        }
-
-        return EmbeddingAggregatorFitCollatedItems(
-            group_indices=helper_output.group_indices,
-            embeddings=helper_output.embeddings,
-            label_map=label_map_batch,
-            padding_mask=helper_output.padding_mask,
-            sequence_lengths=helper_output.sequence_lengths,
-            instance_mask_map=instance_mask_map_batch,
-        )
-
-
 class EmbeddingAggregatorVariableSizeSequencesPredictCollate:
     def __init__(
         self,
@@ -317,8 +254,7 @@ class EmbeddingAggregatorVariableSizeSequencesPredictCollate:
         padding_indicator: float = 1,
         padding_mask_dtype: torch.dtype = torch.uint8,
     ) -> None:
-        """Collate functionality to be used as the collate_fn of DataLoader for predict stages of
-        embedding aggregators.
+        """Collate functionality to be used as the a Dataloader's collate_fn during trainer.predict().
 
         Args:
             order: Desired order of group embeddings batch tensor. 'bsf' stands for Batch, Sequence,

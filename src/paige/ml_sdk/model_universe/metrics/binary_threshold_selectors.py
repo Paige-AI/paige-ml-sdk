@@ -7,13 +7,11 @@ from sklearn.metrics import roc_curve
 
 
 class PredsBinaryTargetsMetric(Protocol):
-    def __call__(self, preds: np.ndarray, targets: np.ndarray) -> float:
-        ...
+    def __call__(self, preds: np.ndarray, targets: np.ndarray) -> float: ...
 
 
 class ThresholdSelector(ABC):
-    def __call__(self, *, probs: NDArray, targets: NDArray) -> float:
-        ...
+    def __call__(self, *, probs: NDArray, targets: NDArray) -> float: ...
 
 
 class MinimizeExpectedCost(ThresholdSelector):
@@ -82,52 +80,3 @@ class YoudenJStatistic(MinimizeExpectedCost):
         - https://stats.stackexchange.com/a/386433
         """
         self.m = 1
-
-
-class MaximizeMetric(ThresholdSelector):
-    def __init__(self, metric: PredsBinaryTargetsMetric) -> None:
-        """Chooses threshold that maximizes the `metric`.
-
-        Args:
-            metric: a binary metric (e.g. sensitivity, specificity)
-        """
-        super().__init__()
-        self.metric = metric
-
-    def __call__(self, *, probs: NDArray, targets: NDArray) -> float:
-        _, _, thresholds = roc_curve(y_true=targets, y_score=probs, drop_intermediate=False)
-        best_metric, best_t = -float('inf'), -float('inf')
-        for t in thresholds:
-            # TODO: use make_predictions_from_positive_class_scores here
-            preds = probs >= t  # consistent with scikit.metrics.roc_curve
-            metric = self.metric(preds=preds, targets=targets)
-            if metric > best_metric:
-                best_metric = metric
-                best_t = t
-        return best_t
-
-
-class FixMetric(ThresholdSelector):
-    def __init__(self, metric: PredsBinaryTargetsMetric, target_value: float) -> None:
-        """Chooses threshold that that gets the `metric` closest to the `target_value`
-
-        Args:
-            metric: a binary metric (e.g. sensitivity, specificity)
-            target_value: target value
-        """
-        super().__init__()
-        self.metric = metric
-        self.target_value = target_value
-
-    def __call__(self, *, probs: NDArray, targets: NDArray) -> float:
-        _, _, thresholds = roc_curve(y_true=targets, y_score=probs, drop_intermediate=False)
-        best_diff, best_t = float('inf'), -float('inf')
-        for t in thresholds:
-            # TODO: use make_predictions_from_positive_class_scores here
-            preds = probs >= t  # consistent with scikit.metrics.roc_curve
-            metric = self.metric(preds=preds, targets=targets)
-            diff = abs(metric - self.target_value)
-            if diff < best_diff:
-                best_diff = diff
-                best_t = t
-        return best_t

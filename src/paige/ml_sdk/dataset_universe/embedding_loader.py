@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 def load_torch(p: Union[PathLike, Iterable[PathLike]]) -> Tensor:
+    """loads embeddings using torch.load"""
     if isinstance(p, (str, Path)):
         return torch.load(p)['embeddings']  # type: ignore[no-any-return]
     else:
@@ -27,11 +28,9 @@ class EmbeddingNotFoundError(Exception):
 
 # In case other Embedding Loader classes must be implemented
 class EmbeddingLoader(Protocol):
-    def load(self, __identifier: Union[str, Iterable[str]]) -> Tensor:
-        ...
+    def load(self, __identifier: Union[str, Iterable[str]]) -> Tensor: ...
 
-    def lookup_embeddings_filepath(self, embedding_filename: str) -> Optional[Path]:
-        ...
+    def lookup_embeddings_filepath(self, embedding_filename: str) -> Optional[Path]: ...
 
 
 class FileSystemEmbeddingLoader(EmbeddingLoader):
@@ -48,6 +47,7 @@ class FileSystemEmbeddingLoader(EmbeddingLoader):
         Args:
             embeddings_dir: Directory expected to contain all embedding files.
             load_func: Reads one or more embedding files, concatenates them in the latter case.
+            extension: Embeddings file extension. Defaults to `.pt`.
         """
         self.embeddings_dir = Path(embeddings_dir)
         self.load_func = load_func
@@ -58,10 +58,7 @@ class FileSystemEmbeddingLoader(EmbeddingLoader):
         Loads embeddings for a given group name.
 
         Args:
-            group_name: Identifies the name(s) of the embeddings filepath to be loaded.
-
-        ..note:: `group_name` is can be an iterable of group_names, in which case multiple
-          embeddings are loaded. A more accurate arg name would be `group_name_or_names`.
+            embedding_filename_or_names: Identifies the name(s) of the embeddings filepaths to be loaded.
         """
         if isinstance(embedding_filename_or_names, str):
             embeddings = self.load_func(
@@ -78,7 +75,7 @@ class FileSystemEmbeddingLoader(EmbeddingLoader):
         Finds the embedding filepath.
 
         Args:
-            reference: The name of the embeddings file
+            embedding_filename: The name of the embeddings file
 
         Raises:
             EmbeddingNotFoundError: If no embeddings were found.

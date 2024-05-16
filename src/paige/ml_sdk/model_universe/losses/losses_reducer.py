@@ -7,12 +7,11 @@ from torch import Tensor, as_tensor
 class LossesReducer(ABC):
     """Base class for losses reducers.
 
-    Losses reducer is used to reduce multiple losses where each loss is identified by its key.
+    LossesReducer instances are used to reduce multiple losses where each loss is identified by its key.
     """
 
     @abstractmethod
-    def reduce(self, losses: Mapping[str, Tensor]) -> Tensor:
-        ...
+    def reduce(self, losses: Mapping[str, Tensor]) -> Tensor: ...
 
     def _check_negative_loss(self, losses: Mapping[str, Tensor]) -> None:
         """Checks if there's any negative-valued loss.

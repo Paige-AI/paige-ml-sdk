@@ -1,6 +1,6 @@
 import logging
 from dataclasses import dataclass
-from typing import Dict, Literal
+from typing import Dict
 
 import torch
 
@@ -24,6 +24,9 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class AggregatorBinClsGroupMetricsComputer(AggregatorMetricsComputer):
+    """Computes binary classification metrics on the model head indicated
+    by `label_name`."""
+
     label_name: str
     pos_cls_idx: int = 1
     metrics_computer: BinaryClassificationMetricsComputer = BinaryClassificationMetricsComputer()
@@ -63,6 +66,9 @@ class AggregatorBinClsGroupMetricsComputer(AggregatorMetricsComputer):
 
 @dataclass
 class AggregatorMulticlassGroupMetricsComputer(AggregatorMetricsComputer):
+    """Computes multiclass classification metrics on the model head indicated
+    by `label_name`."""
+
     label_name: str
     metrics_computer: MulticlassClassificationMetricsComputer = (
         MulticlassClassificationMetricsComputer()
