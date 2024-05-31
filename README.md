@@ -1,8 +1,11 @@
-# Paige ML SDK
+# Paige ML SDK (Alpha)
 
-  
+This package provides tools for training supervised machine learning models for computational pathology tasks using tile-level embeddings.
 
-This package equips users with tools to train supervised machine learning models using foundation model embeddings
+This repository accompanies the publication of the Paige Virchow foundation model suite. If you use this repository for academic research, please cite the following paper:
+Vorontsov, Eugene et al. “Virchow: A Million-Slide Digital Pathology Foundation Model.” ArXiv abs/2309.07778 (2023).
+
+This repository is intended strictly for non-commercial academic research use. For commercial collaborations, please contact Paige AI under the appropriate terms. For detailed terms, please refer to our LICENSE.
 
   
 
