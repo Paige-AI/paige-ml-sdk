@@ -16,10 +16,10 @@ class AggregatorDataModule(LightningDataModule):
     def __init__(
         self,
         *,
-        train_dataset: EmbeddingDataset,
-        tune_dataset: EmbeddingDataset,
-        num_workers: int,
         batch_size: int,
+        num_workers: int,
+        train_dataset: Optional[EmbeddingDataset] = None,
+        tune_dataset: Optional[EmbeddingDataset] = None,
         test_dataset: Optional[EmbeddingDataset] = None,
     ) -> None:
         super().__init__()
@@ -39,14 +39,23 @@ class AggregatorDataModule(LightningDataModule):
         )
 
     def train_dataloader(self) -> DataLoader:
+        if self.train_dataloader is None:
+            raise RuntimeError('attempting train loop but train dataset is not defined.')
         return self.make_dataloader(self.train_dataset, shuffle=True)
 
     def val_dataloader(self) -> DataLoader:
+        if self.val_dataloader is None:
+            raise RuntimeError('attempting validation loop but validation dataset is not defined.')
         return self.make_dataloader(self.tune_dataset, shuffle=False)
 
     def test_dataloader(self) -> DataLoader:
         if self.test_dataset is None:
-            raise RuntimeError('attempting test loop but test dataloader is not defined.')
+            raise RuntimeError('attempting test loop but test dataset is not defined.')
+        return self.make_dataloader(self.test_dataset, shuffle=False)
+
+    def predict_dataloader(self) -> DataLoader:
+        if self.test_dataset is None:
+            raise RuntimeError('attempting predict loop but test dataset is not defined.')
         return self.make_dataloader(self.test_dataset, shuffle=False)
 
 
@@ -76,25 +85,22 @@ def init_datamodule_from_dataset_filepaths(
         embeddings_filename_column: column containing slide name. Used to
             identify embedding files. Must be consistent across train, tune,
             and test dataset csvs.
-        train_dataset_path: Path to train dataset csv. If omitted, test
-            dataset must be set.
-        tune_dataset_path: Path to tune dataset csv. Must be set if
-            train_dataset_path is set.
-        test_dataset_path: Path to test dataset csv. Required if running
-            inference on a pretrained model, but optional during training.
+        train_dataset_path: Path to train dataset csv. Must be present during fit.
+        tune_dataset_path: Path to tune dataset csv. Must be present during fit or validate.
+        test_dataset_path: Path to test dataset csv. Must be present during test or predict.
         embeddings_dir: Specifies a single directory to be used to load
             embeddings from. To be used if train, tune, and test embeddings
             all reside in a common directory. If this is not the case, use the
             train/tune/test_embeddings_dir arguments instead.
         train_embeddings_dir: Path to train embeddings dir. May be omitted if
-            embeddings_dir is used, or if user wishes only to run inference
-            on a test set (skipping training).
+            embeddings_dir is used, or if user is running a command which
+            doesn't require a train dataset (e.g., predict, test, or validate).
         tune_embeddings_dir: Path to tune embeddings dir. May be omitted if
-            embeddings_dir is used, or if user wishes only to run inference
-            on a test set (skipping training).
+            embeddings_dir is used, or if user is running a command which
+            doesn't require a tune dataset (e.g., predict or test).
         test_embeddings_dir: Path to test embeddings dir. May be omitted if
-            embeddings_dir is used, or during training if no test set is
-            available.
+            embeddings_dir is used, or if user is running a command which
+            doesn't require a test set (e.g., fit or validate).
         label_missing_value: Missing label value. Defaults to -999.
         group_col: column specifying level at which to perform aggregation. If
             omitted, defaults to slide-level.
@@ -108,15 +114,15 @@ def init_datamodule_from_dataset_filepaths(
             optionally a test dataloader.
     """
     use_global_embeddings_dir = embeddings_dir is not None
-    use_specific_embeddings_dirs = bool(
+    use_datasplit_embeddings_dirs = bool(
         train_embeddings_dir or tune_embeddings_dir or test_embeddings_dir
     )
-    if use_global_embeddings_dir and use_specific_embeddings_dirs:
+    if use_global_embeddings_dir and use_datasplit_embeddings_dirs:
         raise RuntimeError(
             'Either `embeddings_dir` should be specified, or'
             '`[train/tune/test]_embeddings_dir`, but not both.'
         )
-    elif not use_global_embeddings_dir and not use_specific_embeddings_dirs:
+    elif not use_global_embeddings_dir and not use_datasplit_embeddings_dirs:
         raise RuntimeError(
             'No embeddings directories were provided'
             'If all embeddings reside in a common directory, use `embeddings_dir`'
@@ -170,11 +176,8 @@ def init_datamodule_from_dataset_filepaths(
     else:
         test_dataset = None
 
-    if not (train_dataset or test_dataset):
-        raise RuntimeError(
-            'Neither train_dataset_path nor test_dataset_path were provided.'
-            'At least one must be provided.'
-        )
+    if not (train_dataset or tune_dataset or test_dataset):
+        raise RuntimeError('Train, tune, and test datasets were all omitted.')
 
     if train_dataset and not tune_dataset:
         raise RuntimeError('Train dataset was provided without a tune dataset.')
