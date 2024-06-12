@@ -46,10 +46,6 @@ def main() -> None:
         },
         subclass_mode_model=True,  # Any subclass of `Aggregator` can be provided to the --model arg.
     )
-    # if cli.datamodule.train_dataset:
-    #     cli.trainer.fit(cli.model, cli.datamodule)
-    # if cli.datamodule.test_dataset:
-    #     cli.trainer.test(cli.model, cli.datamodule, ckpt_path='best')
 
 
 if __name__ == '__main__':
