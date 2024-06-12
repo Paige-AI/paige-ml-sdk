@@ -65,10 +65,6 @@ class ReduceCollection(ABC, Generic[T_TENSOR, T_NDARRAY, T_REST_contra, R_REST_c
             self.reduce(items_grouped_by_position)
             for items_grouped_by_position in zip_longest(*__tuples)
         ]
-        # TODO:
-        #  /app/src/paige/ml/collections_reduce.py:61:41 - error: Argument of type "list[T_TENSOR@ReduceCollection]" cannot be assigned to parameter "__iterable" of type "Iterable[_T_co@tuple]" in function "__new__"
-        #       TypeVar "_T_co@Iterable" is covariant
-        #           Type "T_TENSOR@ReduceCollection" cannot be assigned to type "_T_co@tuple" (reportGeneralTypeIssues)
         return tuple.__new__(tuple_cls, tuple_args)  # type: ignore
 
     def reduce_dicts(self, __dicts: Sequence[T_DICT]) -> T_DICT:

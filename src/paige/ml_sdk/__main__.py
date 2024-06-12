@@ -1,14 +1,14 @@
 from lightning.pytorch.callbacks import ModelCheckpoint
 from lightning.pytorch.cli import LightningCLI
-from lightning.pytorch.loggers import *
-from torch.optim import *
+from lightning.pytorch.loggers import *  # noqa: F403, F401
+from torch.optim import *  # noqa: F403, F401
 
 from paige.ml_sdk.dataset_universe.datamodule import init_datamodule_from_dataset_filepaths
 from paige.ml_sdk.model_universe.aggregator import Aggregator
 
 # By importing these lightningmodules, we can use them in the aggregator sdk without needing
 # to specify the full import path (e.g., can do --model BinClsAgata instead of --model paige.ml_sdk.algos.BinClsAgata)
-from paige.ml_sdk.model_universe.algos import BinClsAgata, MultiClsAgata
+from paige.ml_sdk.model_universe.algos import BinClsAgata, MultiClsAgata  # noqa: F403, F401
 
 
 def main() -> None:

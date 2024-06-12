@@ -13,4 +13,5 @@ class EmbeddingAggregatorFitDatasetItem(NamedTuple):
 
 class EmbeddingAggregatorFitDatasetProvider(Protocol):
     @property
-    def dataset(self) -> Dataset[EmbeddingAggregatorFitDatasetItem]: ...
+    def dataset(self) -> Dataset[EmbeddingAggregatorFitDatasetItem]:
+        ...

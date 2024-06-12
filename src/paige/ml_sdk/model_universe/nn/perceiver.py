@@ -1,4 +1,4 @@
-from typing import Any, Dict, Literal, Mapping, Optional, Tuple, cast
+from typing import Any, Dict, Literal, Mapping, MutableMapping, Optional, Tuple, cast
 
 import torch
 import torch.nn.functional as F

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, List, NamedTuple, Sequence
+from typing import List, NamedTuple, Sequence
 
 from torch import Tensor
 from torch.nn import Linear, Module, Sequential

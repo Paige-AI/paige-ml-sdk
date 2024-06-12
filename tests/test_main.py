@@ -1,8 +1,8 @@
 import sys
-import pytest
 from pathlib import Path
 from typing import List
 
+import pytest
 from _pytest.capture import CaptureFixture
 from _pytest.monkeypatch import MonkeyPatch
 
