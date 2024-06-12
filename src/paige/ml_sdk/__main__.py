@@ -11,6 +11,16 @@ from paige.ml_sdk.model_universe.aggregator import Aggregator
 from paige.ml_sdk.model_universe.algos import BinClsAgata, MultiClsAgata  # noqa: F403, F401
 
 
+class AggregatorCLI(LightningCLI):
+    def add_arguments_to_parser(self, parser):
+        # Both the datamodule and the model require the same list of labels as input
+        # But providing them as arguments twice is combersome and error prone. We use
+        # `link_arguments` so that users only must specify `--data.label_columns`; the value will
+        # get replicate automatically for --model.label_names.
+        # See https://lightning.ai/docs/pytorch/stable/cli/lightning_cli_expert.html#argument-linking
+        parser.link_arguments("data.label_columns", "model.init_args.label_names")
+
+
 def main() -> None:
     """CLI for model training.
 
@@ -30,7 +40,7 @@ def main() -> None:
     #           monitor: val.cancer.auc
     #           mode: max
     checkpoint_callback = ModelCheckpoint(monitor='val_loss')
-    LightningCLI(
+    AggregatorCLI(
         model_class=Aggregator,
         datamodule_class=init_datamodule_from_dataset_filepaths,
         # LightningCLI will write the experiment's configuration to a yaml file called

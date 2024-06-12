@@ -77,7 +77,7 @@ def init_datamodule_from_dataset_filepaths(
     batch_size: int = 1,
     mode: Literal['csv', 'parquet'] = 'csv',
 ) -> AggregatorDataModule:
-    """Constructs datasets from their filepaths and intializes an AggregatorDataModule instance.
+    """Construct datasets from their filepaths and intialize a datamodule.
 
     Args:
         label_columns: columns to use as targets. Must be consistent across

@@ -1,1 +1,1 @@
-python -m paige.ml_sdk --config config.yaml
+python -m paige.ml_sdk fit --config config.yaml

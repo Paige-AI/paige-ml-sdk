@@ -14,8 +14,6 @@ def bin_cls_agata_args() -> List[str]:
     return [
         '--model',
         'BinClsAgata',
-        '--model.label_names',
-        '[cancer,precursor]',
         '--model.in_features',
         '5',
         '--model.layer1_out_features',
@@ -95,8 +93,6 @@ class TestCLI:
             'test',
             '--data.test_dataset_path',
             str(f_path_to_dataset_csv),
-            '--ckpt_path',
-            '~/projects/paige-ml-sdk/tests/lightning_logs/version_42/checkpoints/epoch=1-step=6.ckpt',
         ]
         test_args += data_args + bin_cls_agata_args
         monkeypatch.setattr(sys, 'argv', test_args)
@@ -117,8 +113,6 @@ class TestCLI:
             'predict',
             '--data.test_dataset_path',
             str(f_path_to_dataset_csv),
-            '--ckpt_path',
-            '~/projects/paige-ml-sdk/tests/lightning_logs/version_42/checkpoints/epoch=1-step=6.ckpt',
         ]
         test_args += data_args + bin_cls_agata_args
         monkeypatch.setattr(sys, 'argv', test_args)
@@ -255,8 +249,6 @@ class TestCLI:
             str(f_path_to_dataset_csv),
             '--data.embeddings_filename_column',
             'image_uri',
-            '--model.label_names',
-            '[precursor,grade]',
             '--model.n_classes',
             '[2,3]',
             '--data.label_columns',
