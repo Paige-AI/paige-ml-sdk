@@ -1,14 +1,24 @@
 from lightning.pytorch.callbacks import ModelCheckpoint
 from lightning.pytorch.cli import LightningCLI
-from lightning.pytorch.loggers import *
-from torch.optim import *
+from lightning.pytorch.loggers import *  # noqa: F403, F401
+from torch.optim import *  # noqa: F403, F401
 
 from paige.ml_sdk.dataset_universe.datamodule import init_datamodule_from_dataset_filepaths
 from paige.ml_sdk.model_universe.aggregator import Aggregator
 
 # By importing these lightningmodules, we can use them in the aggregator sdk without needing
-# to specify the full import path (e.g., can do --model BinClsAgata instead of --model paige.ml_sdk...)
-from paige.ml_sdk.model_universe.algos import BinClsAgata, MultiClsAgata
+# to specify the full import path (e.g., can do --model BinClsAgata instead of --model paige.ml_sdk.algos.BinClsAgata)
+from paige.ml_sdk.model_universe.algos import BinClsAgata, MultiClsAgata  # noqa: F403, F401
+
+
+class AggregatorCLI(LightningCLI):
+    def add_arguments_to_parser(self, parser):
+        # Both the datamodule and the model require the same list of labels as input
+        # But providing them as arguments twice is combersome and error prone. We use
+        # `link_arguments` so that users only must specify `--data.label_columns`; the value will
+        # get replicate automatically for --model.label_names.
+        # See https://lightning.ai/docs/pytorch/stable/cli/lightning_cli_expert.html#argument-linking
+        parser.link_arguments("data.label_columns", "model.init_args.label_names")
 
 
 def main() -> None:
@@ -22,7 +32,7 @@ def main() -> None:
     # callbacks can be overriden from cli as shown here:
     # https://lightning.ai/docs/pytorch/stable/cli/lightning_cli_advanced_3.html#trainer-callbacks-and-arguments-with-class-type
     #
-    # For example, to use a metric other than `val_loss`, you can put this in your config.yaml:
+    # For example, to use a metric other than `val_loss`, you can put this in config.yaml:
     # trainer:
     #   callbacks:
     #       - class_path: pytorch_lightning.callbacks.ModelCheckpoint
@@ -30,7 +40,7 @@ def main() -> None:
     #           monitor: val.cancer.auc
     #           mode: max
     checkpoint_callback = ModelCheckpoint(monitor='val_loss')
-    cli = LightningCLI(
+    AggregatorCLI(
         model_class=Aggregator,
         datamodule_class=init_datamodule_from_dataset_filepaths,
         # LightningCLI will write the experiment's configuration to a yaml file called
@@ -44,12 +54,8 @@ def main() -> None:
             'max_epochs': 2,
             'callbacks': [checkpoint_callback],
         },
-        run=False,
         subclass_mode_model=True,  # Any subclass of `Aggregator` can be provided to the --model arg.
     )
-    cli.trainer.fit(cli.model, cli.datamodule)
-    if cli.datamodule.test_dataset:
-        cli.trainer.test(cli.model, cli.datamodule, ckpt_path='best')
 
 
 if __name__ == '__main__':

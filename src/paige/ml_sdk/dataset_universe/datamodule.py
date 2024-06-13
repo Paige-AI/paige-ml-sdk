@@ -16,10 +16,10 @@ class AggregatorDataModule(LightningDataModule):
     def __init__(
         self,
         *,
-        train_dataset: EmbeddingDataset,
-        tune_dataset: EmbeddingDataset,
-        num_workers: int,
         batch_size: int,
+        num_workers: int,
+        train_dataset: Optional[EmbeddingDataset] = None,
+        tune_dataset: Optional[EmbeddingDataset] = None,
         test_dataset: Optional[EmbeddingDataset] = None,
     ) -> None:
         super().__init__()
@@ -39,25 +39,35 @@ class AggregatorDataModule(LightningDataModule):
         )
 
     def train_dataloader(self) -> DataLoader:
+        if self.train_dataloader is None:
+            raise RuntimeError('attempting train loop but train dataset is not defined.')
         return self.make_dataloader(self.train_dataset, shuffle=True)
 
     def val_dataloader(self) -> DataLoader:
+        if self.val_dataloader is None:
+            raise RuntimeError('attempting validation loop but validation dataset is not defined.')
         return self.make_dataloader(self.tune_dataset, shuffle=False)
 
     def test_dataloader(self) -> DataLoader:
         if self.test_dataset is None:
-            raise RuntimeError('attempting test loop but test dataloader is not defined.')
+            raise RuntimeError('attempting test loop but test dataset is not defined.')
+        return self.make_dataloader(self.test_dataset, shuffle=False)
+
+    def predict_dataloader(self) -> DataLoader:
+        if self.test_dataset is None:
+            raise RuntimeError('attempting predict loop but test dataset is not defined.')
         return self.make_dataloader(self.test_dataset, shuffle=False)
 
 
 def init_datamodule_from_dataset_filepaths(
     *,
-    train_dataset_path: PathLike,
-    tune_dataset_path: PathLike,
-    train_embeddings_dir: PathLike,
     label_columns: Set[str],
     embeddings_filename_column: str,
+    train_dataset_path: Optional[PathLike] = None,
+    tune_dataset_path: Optional[PathLike] = None,
     test_dataset_path: Optional[PathLike] = None,
+    embeddings_dir: Optional[PathLike] = None,
+    train_embeddings_dir: Optional[PathLike] = None,
     tune_embeddings_dir: Optional[PathLike] = None,
     test_embeddings_dir: Optional[PathLike] = None,
     label_missing_value: int = -999,
@@ -67,57 +77,95 @@ def init_datamodule_from_dataset_filepaths(
     batch_size: int = 1,
     mode: Literal['csv', 'parquet'] = 'csv',
 ) -> AggregatorDataModule:
-    """Constructs datasets from their filepaths and intializes an AggregatorDataModule instance.
+    """Construct datasets from their filepaths and intialize a datamodule.
 
     Args:
-        train_dataset_path: Path to train dataset csv.
-        tune_dataset_path: Path to tune dataset csv.
-        train_embeddings_dir: Path to train embeddings dir.
-        label_columns: columns to use as targets. Must be consistent across train, tune, and test csvs.
-        embeddings_filename_column: column containing slide name. Used to identify embedding files. Must be
-            consistent across train, tune, and test csvs.
-        test_dataset_path: Path to train dataset csv. If omitted, testing is skipped.
-        tune_embeddings_dir: Path to tune embeddings dir. If omitted, embeddings are assumed to be
-            under `train_embeddings_dir`.
-        test_embeddings_dir: Path to test embeddings dir. If omitted, embeddings are assumed to be
-            under `train_embeddings_dir`.
+        label_columns: columns to use as targets. Must be consistent across
+            train, tune, and test dataset csvs.
+        embeddings_filename_column: column containing slide name. Used to
+            identify embedding files. Must be consistent across train, tune,
+            and test dataset csvs.
+        train_dataset_path: Path to train dataset csv. Must be present during fit.
+        tune_dataset_path: Path to tune dataset csv. Must be present during fit or validate.
+        test_dataset_path: Path to test dataset csv. Must be present during test or predict.
+        embeddings_dir: Specifies a single directory to be used to load
+            embeddings from. To be used if train, tune, and test embeddings
+            all reside in a common directory. If this is not the case, use the
+            train/tune/test_embeddings_dir arguments instead.
+        train_embeddings_dir: Path to train embeddings dir. May be omitted if
+            embeddings_dir is used, or if user is running a command which
+            doesn't require a train dataset (e.g., predict, test, or validate).
+        tune_embeddings_dir: Path to tune embeddings dir. May be omitted if
+            embeddings_dir is used, or if user is running a command which
+            doesn't require a tune dataset (e.g., predict or test).
+        test_embeddings_dir: Path to test embeddings dir. May be omitted if
+            embeddings_dir is used, or if user is running a command which
+            doesn't require a test set (e.g., fit or validate).
         label_missing_value: Missing label value. Defaults to -999.
-        group_col: column specifying level at which to perform aggregation. If omitted, defaults to
-            slide-level.
+        group_col: column specifying level at which to perform aggregation. If
+            omitted, defaults to slide-level.
+        filename_extension: Filename extension. Defaults to .pt
         num_workers: number of dataloader workers. Defaults to 0.
         batch_size: batch size. Defaults to 1.
+        mode: whether to load datasets from csv or parquet. Defaults to csv.
 
     Returns:
         AggregatorDataModule: a datamodule complete with a train dataloader, tune dataloader, and
             optionally a test dataloader.
     """
-    train_dataset = EmbeddingDataset.from_filepath(
-        train_dataset_path,
-        train_embeddings_dir,
-        label_columns,
-        embeddings_filename_column,
-        label_missing_value,
-        group_col or embeddings_filename_column,  # fallback assumption: slide-level grouping
-        filename_extension=filename_extension,
-        mode=mode,
+    use_global_embeddings_dir = embeddings_dir is not None
+    use_datasplit_embeddings_dirs = bool(
+        train_embeddings_dir or tune_embeddings_dir or test_embeddings_dir
     )
+    if use_global_embeddings_dir and use_datasplit_embeddings_dirs:
+        raise RuntimeError(
+            'Either `embeddings_dir` should be specified, or'
+            '`[train/tune/test]_embeddings_dir`, but not both.'
+        )
+    elif not use_global_embeddings_dir and not use_datasplit_embeddings_dirs:
+        raise RuntimeError(
+            'No embeddings directories were provided'
+            'If all embeddings reside in a common directory, use `embeddings_dir`'
+            'otherwise, specify [train/tune/test]_embeddings_dir individually.'
+        )
+    elif use_global_embeddings_dir:
+        train_embeddings_dir = embeddings_dir
+        tune_embeddings_dir = embeddings_dir
+        test_embeddings_dir = embeddings_dir
 
-    tune_dataset = EmbeddingDataset.from_filepath(
-        tune_dataset_path,
-        tune_embeddings_dir or train_embeddings_dir,  # fallback assumption: share w/ train dir
-        label_columns,
-        embeddings_filename_column,
-        label_missing_value,
-        group_col or embeddings_filename_column,
-        filename_extension=filename_extension,
-        mode=mode,
-    )
+    if train_dataset_path:
+        train_dataset = EmbeddingDataset.from_filepath(
+            train_dataset_path,
+            train_embeddings_dir,
+            label_columns,
+            embeddings_filename_column,
+            label_missing_value,
+            group_col or embeddings_filename_column,  # fallback assumption: slide-level grouping
+            filename_extension=filename_extension,
+            mode=mode,
+        )
+    else:
+        train_dataset = None
+
+    if tune_dataset_path:
+        tune_dataset = EmbeddingDataset.from_filepath(
+            tune_dataset_path,
+            tune_embeddings_dir,
+            label_columns,
+            embeddings_filename_column,
+            label_missing_value,
+            group_col or embeddings_filename_column,  # fallback assumption: slide-level grouping
+            filename_extension=filename_extension,
+            mode=mode,
+        )
+    else:
+        tune_dataset = None
 
     if test_dataset_path:
         # makes same fallback mode assumptions as above
         test_dataset = EmbeddingDataset.from_filepath(
             test_dataset_path,
-            test_embeddings_dir or train_embeddings_dir,
+            test_embeddings_dir,
             label_columns,
             embeddings_filename_column,
             label_missing_value,
@@ -127,6 +175,12 @@ def init_datamodule_from_dataset_filepaths(
         )
     else:
         test_dataset = None
+
+    if not (train_dataset or tune_dataset or test_dataset):
+        raise RuntimeError('Train, tune, and test datasets were all omitted.')
+
+    if train_dataset and not tune_dataset:
+        raise RuntimeError('Train dataset was provided without a tune dataset.')
 
     return AggregatorDataModule(
         train_dataset=train_dataset,

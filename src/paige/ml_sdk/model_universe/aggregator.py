@@ -94,7 +94,8 @@ class AggregatorMetricsComputer(Protocol):
 
 
 class Aggregator(LightningModule):
-    """Defines an aggregator."""
+    # This docstring is used in the CLI help text
+    """Define an Aggregator model"""
 
     def __init__(
         self,

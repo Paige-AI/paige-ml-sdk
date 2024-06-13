@@ -21,7 +21,8 @@ class InputTargetLossFamily(Protocol):
     # https://github.com/pytorch/pytorch/blob/master/torch/nn/modules/loss.py#L13
     reduction: str
 
-    def __call__(self, input: Tensor, target: Tensor) -> Tensor: ...
+    def __call__(self, input: Tensor, target: Tensor) -> Tensor:
+        ...
 
 
 def _enforce_loss_fn_reduction_none(loss_fn: InputTargetLossFamily) -> InputTargetLossFamily:

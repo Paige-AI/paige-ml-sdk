@@ -19,7 +19,6 @@ from paige.ml_sdk.model_universe.aggregator import (
 from paige.ml_sdk.model_universe.losses.loss_computer import AggregatorLossComputer
 from paige.ml_sdk.model_universe.metrics.metrics_computers.aggregator_metrics import (
     AggregatorBinClsGroupMetricsComputer,
-    AggregatorMulticlassGroupMetricsComputer,
 )
 
 # ================ Constants Used Throughout Fixtures ======================

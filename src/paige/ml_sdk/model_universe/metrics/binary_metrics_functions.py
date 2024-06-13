@@ -4,7 +4,7 @@ Colllection of metrics and statistics for binary labels.
 
 import math
 from dataclasses import dataclass
-from typing import Any, Tuple, Union, cast
+from typing import Tuple
 
 import numpy as np
 from numpy.typing import NDArray
