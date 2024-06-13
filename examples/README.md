@@ -5,7 +5,7 @@ This example trains a binary classifier in a supervised manner on a small synthe
 ## Experiment Setup
 
 ### Embeddings
-The files `slide_1.svs.pt`, `slide_2.svs.pt`, `slide_3.svs.pt`, and `slide_4.svs.pt` contain simulated embeddings for four hypothetical slides.
+The files `slide_1.svs.pt`, `slide_2.svs.pt`, `slide_3.svs.pt`, and `slide_4.svs.pt` contain simulated embeddings for four hypothetical slides:
 
 ```python
 >>> import torch
@@ -16,7 +16,7 @@ torch.Size([3, 5])  # 3 embeddings of length 5
 Since this example was designed to run quickly, the dimensionality of the data is low. In reality embeddings will be larger.
 
 ### Dataset
-This ground truth (referred to synonymously as 'labels' or 'targets') used for training supervision is specified in the `dataset.csv` file:
+This ground truth used for training supervision is specified in the `dataset.csv` file:
 
 |slide|cancer|precursor|
 |--|--|--|
@@ -25,7 +25,7 @@ This ground truth (referred to synonymously as 'labels' or 'targets') used for t
 |slide_3.svs|0|0|
 |slide_4.svs|1|1|
 
-In this example, each slide has a name and two binary values: one indicating the presence or absence of precursor lesions, and the other indicating the same for cancer. 
+In this example, each slide has a name and two binary values: one indicating the presence or absence of precursor lesions, and the other indicating the presence/absence of cancer. 
 
 #### Missing Labels
 Missing labels are encoded by the integer -999, has evidenced by slide 2 in the dataset, which is missing a precursor label.
@@ -35,19 +35,19 @@ Train, tune, and test datasets should each go in separate csv files. Here, the s
 
 ## Training a Binary Classifier
 
-We will train a multiheaded binary classifier with two prediction heads: one predicting whether or not a slide contains cancer, and the other doing the same for the precursor label. If the sdk is run with no arguments:
+We will train a multiheaded binary classifier with two prediction heads: one predicting whether or not a slide contains cancer, and the other doing the same for the precursor label. The sdk is equipped with a cli powered by [pytorch lightning](https://lightning.ai/docs/pytorch/stable/) which can be used to kick off experiments. First, try running the cli with no arguments:
 
 ```bash
 python -m paige.ml_sdk
 ```
 
-an error is thrown with message `error: expected "subcommand" to be one of {fit,validate,test,predict}, but it was not provided`. Use the `fit` subcommand since to train a model:
+an error is thrown with message `error: expected "subcommand" to be one of {fit,validate,test,predict}, but it was not provided`. To train a model, use the `fit` subcommand:
 
 ```bash
 python -m paige.ml_sdk fit
 ```
 
-The sdk now displays `error: Parser key "data.label_columns": Expected a <class 'set'>. Got value: None`. It expected a `--data.label_columns` argument. To see documention on what that argument does, run `--help`:
+Now, the cli displays `error: Parser key "data.label_columns": Expected a <class 'set'>. Got value: None`. This means that it expected a `--data.label_columns` argument. To see documention on what that argument does, run `--help`:
 
 ```bash
 python -m paige.ml_sdk fit --help
@@ -59,7 +59,7 @@ After scrolling down, the help text shows `--data.label_columns [ITEM,...]: Data
 python -m paige.ml_sdk fit --data.label_columns [cancer,precursor]
 ```
 
-The sdk now throws a different error, because `--data.embeddings_filename_column` is missing. We can repeat this process of adding required arguments until the sdk is satisfied. Let's stop halfway through, once all the data arguments have been specified:
+The cli now throws a different error, because `--data.embeddings_filename_column` is missing. We can repeat this process of adding required arguments until the cli is satisfied. Let's stop halfway through, once all the data arguments have been specified:
 
 ```bash
 python -m paige.ml_sdk \
@@ -70,7 +70,7 @@ fit \
 --data.tune_dataset_path dataset.csv \
 --data.embeddings_dir .
 ```
-Now comes the matter of selecting which model to use. Users may choose from any of the models defined in `src/ml_sdk/model_universe/algos.py`. Two popular choices are Perceiver and Agata. Let's use Agata, which stands for "Aggregator with Attention". It's a simple model that combines linear layers and attention to produce slide-level predictions. Agata can be used for multihead classification or regression tasks; different flavors of Agata are implemented by different classes in `algos.py`. Let's use `BinClsAgata`, which performs binary classifcation. The final command will look like this:
+Now comes the matter of selecting which model to use. Users may choose from any of the models defined in [algos.py](https://github.com/Paige-AI/paige-ml-sdk/blob/main/src/paige/ml_sdk/model_universe/algos.py). Two popular choices are Perceiver and Agata. Let's use Agata, which stands for "Aggregator with Attention". It's a simple model that combines linear layers and attention to produce slide-level predictions. Agata can be used for multihead classification or regression tasks; different flavors of Agata are implemented by different classes in `algos.py`. Let's use `BinClsAgata`, which performs binary classifcation. The final command will look like this:
 
 ```bash
 python -m paige.ml_sdk \
@@ -85,11 +85,11 @@ fit \
 --model.layer1_out_features 3 \
 --model.layer2_out_features 3
 ```
-`in_features`, `layer1_out_features`, and `layer2_out_features` are all optional arguments which we're overriding to make the network smaller so that in trains faster in this example. You can run this example too- it should only take a few seconds.
+`in_features`, `layer1_out_features`, and `layer2_out_features` are all optional arguments which we're overriding to make the network smaller so that in trains faster in this example. You can run this example too; it should only take a few seconds.
 
 ### Logging Experiment Outputs
 
-The sdk uses pytorch lightning, whose default logger writes experiment outputs to the `lightning_logs` folder. If you ran the previous command, you should now see that folder:
+The sdk's default logger writes experiment outputs to the `lightning_logs` folder. If you ran the previous command, you should now see that folder:
 
 ```bash
 find lightning_logs/
@@ -121,7 +121,7 @@ For experiments where configuration from the command line would be cumbersome, u
 
 ## Running Inference: Predict, Test, and Validate
 
-The sdk has three other commands besides `fit`: predict, test, and validate. These three commands are conceptually similar to each other as they are all used to run inference on a chosen checkpoint. They all switch the model into eval mode, disable gradients, and make a single pass through the dataloader. Let's take a look at `predict`:
+The sdk's cli has three other commands besides `fit`: predict, test, and validate. These three commands are conceptually similar to each other as they are all used to run inference on a chosen checkpoint. They all switch the model into eval mode, disable gradients, and make a single pass through the dataloader. Let's take a look at `predict`:
 
 ```bash
 python -m paige.ml_sdk \
