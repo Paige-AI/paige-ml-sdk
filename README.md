@@ -11,7 +11,7 @@ This repository is intended strictly for non-commercial academic research use. F
 `cd paige-ml-sdk; pip install -e .`
 
 ## Getting Started
-The SDK is equipped with a cli which can be used to train models and run inference. Refer to the [examples](https://github.com/Paige-AI/paige-ml-sdk/tree/main/examples) directory for a basic tutorial illustrating how to use it and how to organize your data. Otherwise, run `python -m paige.ml_sdk --help` for a list of available commands.
+The SDK is equipped with a cli which can be used to train models and run inference. Run `python -m paige.ml_sdk --help` to get started, or refer to the [examples](https://github.com/Paige-AI/paige-ml-sdk/tree/main/examples) directory for a basic tutorial illustrating how to use the SDK and how to organize your data.
 
 ## Advanced Usage
 
@@ -19,7 +19,7 @@ The SDK and its CLI are powered by [pytorch lightning](https://lightning.ai/docs
 
 ### Changing Loggers
 
-By default, the sdk relies on Lightning's [CSV logger](https://lightning.ai/docs/pytorch/stable/extensions/generated/lightning.pytorch.loggers.CSVLogger.html#csvlogger) which writes outputs to the `lightning_logs` folder. Use `--trainer.logger` and choose from any of the logger classes definere [here](https://lightning.ai/docs/pytorch/stable/extensions/logging.html#supported-loggers). For example, users familiar with [Weights and Biases](https://wandb.ai/site) may choose the argument `--trainer.logger WandbLogger`.
+By default, the sdk relies on Lightning's [CSV logger](https://lightning.ai/docs/pytorch/stable/extensions/generated/lightning.pytorch.loggers.CSVLogger.html#csvlogger) which writes outputs to the `lightning_logs` folder. Use `--trainer.logger` and choose from any of Lightning's [built-in loggers](https://lightning.ai/docs/pytorch/stable/extensions/logging.html#supported-loggers) such as WandB or TensorBoard.
 
 ### Changing Optimizers and Adjusting Learning Rate
 Use `--optimizer` and choose from any of the [torch.optim](https://pytorch.org/docs/stable/optim.html#algorithms) optimizers. Similarly, use `--lr_scheduler` to adjust the learning rate.
