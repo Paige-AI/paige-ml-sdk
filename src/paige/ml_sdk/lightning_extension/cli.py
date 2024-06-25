@@ -19,8 +19,5 @@ class AggregatorCLI(LightningCLI):
         runs `fit` followed by `test` on the best checkpoint from `fit`.
         """
         _subcommands = LightningCLI.subcommands()
-        _subcommands['fit_and_test'] = {
-            'model',
-            'datamodule',
-        }
+        _subcommands['fit_and_test'] = {'model', 'datamodule', 'ckpt_path'}
         return _subcommands
