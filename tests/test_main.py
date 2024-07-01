@@ -120,7 +120,7 @@ class TestCLI:
         captured = capsys.readouterr()
         assert captured.err == ''
 
-    def test_cli_should_run_test_after_fit_with_best_checkpoint(
+    def test_cli_should_run_fit_and_test(
         self,
         capsys: CaptureFixture,
         monkeypatch: MonkeyPatch,
@@ -130,10 +130,12 @@ class TestCLI:
     ) -> None:
         test_args = [
             '/home/aicompute/development/ai-core/lib/ml-sdk/src/paige/ml_sdk/__main__.py',
-            'fit',
+            'fit_and_test',
             '--data.train_dataset_path',
             str(f_path_to_dataset_csv),
             '--data.tune_dataset_path',
+            str(f_path_to_dataset_csv),
+            '--data.test_dataset_path',
             str(f_path_to_dataset_csv),
         ]
         test_args += data_args + bin_cls_agata_args
@@ -142,16 +144,6 @@ class TestCLI:
         main()
         captured = capsys.readouterr()
         assert captured.err == ''
-
-        test_args = [
-            '/home/aicompute/development/ai-core/lib/ml-sdk/src/paige/ml_sdk/__main__.py',
-            'test',
-            '--data.test_dataset_path',
-            str(f_path_to_dataset_csv),
-            '--ckpt_path',
-            'best',
-        ]
-        test_args += data_args
 
     def test_cli_should_raise_RuntimeError_if_dataset_doesnt_match_command(
         self,
