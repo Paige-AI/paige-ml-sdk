@@ -3,7 +3,7 @@
 This package provides tools for training supervised machine learning models for computational pathology tasks using tile-level embeddings.
 
 This repository accompanies the publication of the Paige Virchow foundation model suite. If you use this repository for academic research, please cite the following paper:
-Vorontsov, E., Bozkurt, A., Casson, A. et al. A foundation model for clinical-grade computational pathology and rare cancers detection. Nat Med (2024). https://doi.org/10.1038/s41591-024-03141-0
+Vorontsov, E., Bozkurt, A., Casson, A. et al. "A foundation model for clinical-grade computational pathology and rare cancers detection." Nat Med (2024). https://doi.org/10.1038/s41591-024-03141-0
 
 This repository is intended strictly for non-commercial academic research use. For commercial collaborations, please contact Paige AI under the appropriate terms. For detailed terms, please refer to our LICENSE.
 
