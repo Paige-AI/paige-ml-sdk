@@ -274,13 +274,12 @@ class PerceiverWrapper(nn.Module):
         self,
         image_resampler: nn.Module,
         label_name_fclayer_head_config: Mapping[str, FCHeadConfig],
-        init_perceiver_path: Optional[str],
+        init_perceiver_path: Optional[str],  # perceiver state dict
     ):
         super().__init__()
         self.image_resampler = image_resampler
         if init_perceiver_path is not None:
             sd = torch.load(init_perceiver_path)
-            sd = sd['state_dict']
             sd = {
                 k.replace('image_resampler.', ''): v
                 for k, v in sd.items()

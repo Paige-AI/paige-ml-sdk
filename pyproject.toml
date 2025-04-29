@@ -23,8 +23,9 @@ dependencies = [
     "numpy~=1.24",
     "jsonargparse[signatures]",
     "lightning~=2.1",
-    "torch>=2.1,<2.3",
+    "torch~=2.6",
     "pandas>=2.0,<3",
+    "pyarrow~=20.0",
     "environs>=9.3,<12",
     "scikit-learn~=1.1",
 ]
